@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TradeTools" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#0f172a</item>
+        <item name="android:statusBarColor">#1e293b</item>
+    </style>
+</resources>
