@@ -2,221 +2,635 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Trade Tools</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-body { background: #0f172a; color: #e2e8f0; padding: 15px; padding-bottom: 40px; }
-.box { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
-h2 { font-size: 13px; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 6px; }
-label { display: block; font-size: 11px; font-weight: bold; margin: 8px 0 4px; color: #94a3b8; }
-input, select { width: 100%; padding: 10px; border: 1px solid #475569; border-radius: 6px; font-size: 14px; background: #0f172a; color: #e2e8f0; }
-button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-.btn-blue { background: #2563eb; color: white; }
-.btn-green { background: #16a34a; color: white; }
-.btn-gray { background: #334155; color: #e2e8f0; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
-.metric:last-child { border-bottom: none; }
-.metric strong { color: #e2e8f0; }
-.pos { color: #22c55e; font-weight: bold; }
-.neg { color: #ef4444; font-weight: bold; }
-.hint { font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.4; }
-.tabs { display: flex; gap: 5px; background: #0f172a; padding: 3px; border-radius: 6px; margin-bottom: 10px; }
-.tab { flex: 1; text-align: center; padding: 7px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; color: #94a3b8; }
-.tab.active { background: #2563eb; color: white; }
-.hidden { display: none !important; }
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--pos:#22c55e;--neg:#ef4444;--warn:#f59e0b}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:var(--card);border-bottom:2px solid var(--acc)}
+h1{font-size:16px;color:var(--acc)}
+.pt{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mut)}
+.pt.ok{background:var(--pos)}.pt.charge{background:var(--warn)}.pt.err{background:var(--neg)}
+main{flex:1;overflow-y:auto;padding:12px}
+.vue{display:none}.vue.actif{display:block}
+nav{display:flex;background:var(--card);border-top:1px solid var(--line)}
+nav button{flex:1;padding:8px 0;background:none;border:0;color:var(--mut);font-size:11px}
+nav button.actif{color:var(--acc);border-top:2px solid var(--acc)}
+nav b{display:block;font-size:18px;font-weight:normal}
+.carte{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+h2{font-size:12px;color:var(--mut);text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+label{display:block;font-size:11px;font-weight:bold;color:var(--mut);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #475569;border-radius:8px;font-size:14px;background:var(--bg);color:var(--txt);font-family:inherit}
+.ligne{display:flex;gap:8px;align-items:center;margin-bottom:8px}.ligne>*{flex:1}.ligne>.petit{flex:0 0 auto}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.b{padding:11px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:bold;font-size:14px;width:100%;margin-top:6px}
+.b.sec{background:var(--line);color:var(--txt)}.b.vert{background:#16a34a}.b.rouge{background:#7f1d1d}
+.seg{display:flex;background:var(--bg);padding:3px;border-radius:9px;margin-bottom:10px}
+.seg button{flex:1;padding:8px;border:0;border-radius:7px;background:none;color:var(--mut);font-weight:bold;font-size:13px}
+.seg button.actif{background:#2563eb;color:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.chipw{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 10px;font-size:12px}
+.chipw.sel{border-color:var(--acc);color:var(--acc)}
+.auto{display:flex;align-items:center;gap:6px;font-size:12px;margin:0;color:var(--mut)}.auto input{width:auto}
+#prix{font-size:28px;font-weight:bold;color:var(--acc);text-align:center}
+#var{text-align:center;font-size:13px;margin-top:2px}#hl{text-align:center;font-size:11px;color:var(--mut);margin-top:3px}
+canvas{width:100%;height:250px;display:block;touch-action:none}
+#e-graph,#j-graph{height:170px}
+.note{font-size:11px;color:#64748b;line-height:1.4;margin-top:4px}
+.m{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.m:last-child{border-bottom:0}.m span:first-child{color:var(--mut)}
+.pos{color:var(--pos);font-weight:bold}.neg{color:var(--neg);font-weight:bold}.neu{color:var(--warn);font-weight:bold}
+.sig{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}.sig:last-child{border-bottom:0}
+.sig i{font-style:normal;flex:0 0 18px}
+.verdict{margin-top:8px;padding:9px;border-radius:8px;background:var(--bg);font-size:13px;text-align:center;font-weight:bold}
+.stat{background:var(--bg);border-radius:8px;padding:8px}.stat small{display:block;font-size:10px;color:var(--mut)}.stat b{font-size:15px}
+.trade{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.trade small{display:block;color:var(--mut);font-size:11px}
+.alerte{background:#3b1d1d;border:1px solid #7f1d1d;color:#fecaca;border-radius:8px;padding:8px;font-size:12px;margin-top:8px}
+.info{background:#172554;border:1px solid #1e3a8a;color:#bfdbfe;border-radius:8px;padding:8px;font-size:12px;margin-top:8px}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:50;align-items:center;justify-content:center;padding:12px}
+#overlay.ouvert{display:flex}
+#modal{background:var(--card);border:1px solid var(--acc);border-radius:12px;padding:14px;width:100%;max-width:400px;max-height:92vh;overflow-y:auto}
+#toast{display:none;position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:rgba(0,0,0,.9);border:1px solid var(--acc);border-radius:16px;padding:8px 14px;font-size:13px;z-index:60;max-width:90%;text-align:center}
+#toast.visible{display:block}
 </style>
 </head>
 <body>
+<div id="app">
+  <header><h1>📈 Trade Tools</h1><span id="pt" class="pt" title="État des données"></span></header>
+  <main>
 
-<div class="box">
-  <h2>📊 Marché</h2>
-  <div class="tabs">
-    <div id="tab-crypto" class="tab active" onclick="setMarket('crypto')">₿ Crypto</div>
-    <div id="tab-stock" class="tab" onclick="setMarket('stock')">📈 Action</div>
-  </div>
-  <label>Actif</label>
-  <select id="sel-asset">
-    <option value="bitcoin">BTC / USD</option>
-    <option value="ethereum">ETH / USD</option>
-    <option value="solana">SOL / USD</option>
-  </select>
-  <button class="btn-gray" onclick="fetchPrice()">🔄 Actualiser le prix</button>
-  <div id="price-display" style="text-align:center; font-size:26px; font-weight:bold; margin-top:12px; color:#38bdf8;">—</div>
-  <div id="change-display" style="text-align:center; font-size:13px; margin-top:4px;">—</div>
-</div>
+    <section id="v-marche" class="vue actif">
+      <div class="seg"><button id="m-crypto" class="actif" onclick="choisirMarche('crypto')">₿ Crypto</button><button id="m-actions" onclick="choisirMarche('actions')">📈 Actions</button></div>
+      <div class="ligne"><input id="sym" type="text" autocapitalize="characters" autocomplete="off" placeholder="BTCUSDT, ETHUSDT…" onkeydown="if(event.key==='Enter')chargerSaisie()"><button class="b petit" style="width:auto;margin:0;padding:10px 16px" onclick="chargerSaisie()">OK</button></div>
+      <div id="chips" class="chips"></div>
+      <div class="ligne"><select id="tf" onchange="changerTf()"></select><button id="btn-fav" class="b sec petit" style="width:auto;margin:0" onclick="basculerFavori()">☆</button><label class="auto petit"><input type="checkbox" id="auto" onchange="basculerAuto()"> Auto 30 s</label></div>
+      <div class="carte"><div id="prix">—</div><div id="var"></div><div id="hl"></div></div>
+      <div class="carte">
+        <canvas id="graph"></canvas>
+        <div id="graph-info" class="note">Touchez le graphique pour lire une bougie.</div>
+        <div class="ligne"><button class="b sec" onclick="zoom(-1)">➖ Zoom</button><button class="b sec" onclick="zoom(1)">➕ Zoom</button></div>
+      </div>
+      <div class="carte"><h2>Indicateurs</h2><div id="indic"><div class="note">Chargement…</div></div></div>
+      <div class="carte"><h2>Lecture des signaux</h2><div id="signaux"></div><div id="verdict" class="verdict">—</div>
+        <div class="note">Les indicateurs résument le passé : ils ne prédisent rien et ne constituent pas un conseil en investissement.</div></div>
+      <button class="b vert" onclick="versCalculateur()">🧮 Calculer ma position sur cet actif</button>
+      <p class="note" id="source" style="margin-top:10px"></p>
+    </section>
 
-<div class="box">
-  <h2>📐 Indicateurs Techniques</h2>
-  <div id="indicators">
-    <div class="metric"><span>RSI (14)</span><strong id="rsi-val">—</strong></div>
-    <div class="metric"><span>SMA 20</span><strong id="sma20-val">—</strong></div>
-    <div class="metric"><span>SMA 50</span><strong id="sma50-val">—</strong></div>
-    <div class="metric"><span>Signal</span><strong id="signal-val">—</strong></div>
-  </div>
-  <div class="hint">Les indicateurs se chargent avec les chandeliers OHLC (CoinGecko / Yahoo). RSI &lt; 30 = survente, &gt; 70 = surachat.</div>
-</div>
+    <section id="v-calc" class="vue">
+      <div class="seg"><button id="c-pos" class="actif" onclick="choisirCalc('pos')">Position</button><button id="c-esp" onclick="choisirCalc('esp')">Espérance</button></div>
+      <div id="calc-pos">
+        <div class="carte">
+          <h2>Taille de position</h2>
+          <div class="g2"><div><label>Capital</label><input type="number" id="p-capital" value="1000" min="0" step="any" inputmode="decimal"></div>
+          <div><label>Devise du capital</label><select id="p-capccy"><option>EUR</option><option>USD</option></select></div></div>
+          <div class="g3"><div><label>Risque / trade (%)</label><input type="number" id="p-risk" value="1" min="0.01" max="100" step="any" inputmode="decimal"></div>
+          <div><label>Frais (% / ordre)</label><input type="number" id="p-fee" value="0.1" min="0" step="any" inputmode="decimal"></div>
+          <div><label>Levier (x)</label><input type="number" id="p-lev" value="1" min="1" step="any" inputmode="decimal"></div></div>
+          <div class="g2"><div><label>Devise de l'actif</label><select id="p-assetccy"><option>USD</option><option>EUR</option></select></div>
+          <div><label>1 EUR = … USD</label><input type="number" id="p-taux" value="1.08" min="0" step="any" inputmode="decimal"></div></div>
+          <div class="g3"><div><label>Prix d'entrée</label><input type="number" id="p-entry" step="any" inputmode="decimal"></div>
+          <div><label>Stop-loss</label><input type="number" id="p-stop" step="any" inputmode="decimal"></div>
+          <div><label>Objectif (option)</label><input type="number" id="p-target" step="any" inputmode="decimal"></div></div>
+          <label class="auto" style="margin-top:8px"><input type="checkbox" id="p-entier"> Quantité entière (actions)</label>
+          <button class="b" onclick="calcPosition()">Calculer la taille</button>
+          <div id="p-res"></div>
+        </div>
+      </div>
+      <div id="calc-esp" style="display:none">
+        <div class="carte">
+          <h2>Espérance et simulation</h2>
+          <div class="g2"><div><label>Taux de réussite (%)</label><input type="number" id="e-wr" value="40" min="0" max="100" step="any" inputmode="decimal"></div>
+          <div><label>Ratio gain/risque (R:R)</label><input type="number" id="e-rr" value="2.5" min="0.1" step="any" inputmode="decimal"></div></div>
+          <div class="g2"><div><label>Risque / trade (%)</label><input type="number" id="e-risk" value="1" min="0.01" max="100" step="any" inputmode="decimal"></div>
+          <div><label>Nombre de trades</label><input type="number" id="e-n" value="100" min="10" max="500" step="1" inputmode="numeric"></div></div>
+          <div class="note">R:R = ce que vous gagnez quand vous avez raison, divisé par ce que vous perdez quand vous avez tort. R:R 2,5 : 2,5 € gagnés pour 1 € risqué.</div>
+          <button class="b vert" onclick="calcEsperance()">Calculer et simuler</button>
+          <div id="e-res"></div>
+          <canvas id="e-graph" style="margin-top:10px;display:none"></canvas>
+        </div>
+      </div>
+    </section>
 
-<div class="box">
-  <h2>🎯 Calculateur d'Espérance</h2>
-  <div class="grid2">
-    <div>
-      <label>Taux de réussite (%)</label>
-      <input type="number" id="inp-winrate" value="40" min="0" max="100" step="1">
-    </div>
-    <div>
-      <label>Ratio Gain/Risque (R:R)</label>
-      <input type="number" id="inp-rr" value="2.5" min="0.1" step="0.1">
-    </div>
-  </div>
-  <div class="hint">R:R = combien tu gagnes quand tu as raison, divisé par ce que tu perds quand tu as tort. Ex: R:R 2.5 = tu gagnes 2,5€ pour 1€ risqué.</div>
-  <button class="btn-green" onclick="calcExpectancy()">Calculer l'espérance</button>
-  <div style="margin-top:12px;">
-    <div class="metric"><span>Espérance par trade</span><strong id="exp-result">—</strong></div>
-    <div class="metric"><span>Verdict</span><strong id="exp-verdict">—</strong></div>
-  </div>
-</div>
+    <section id="v-journal" class="vue">
+      <div class="carte"><h2>Statistiques réelles</h2><div id="j-stats" class="g2"></div></div>
+      <div class="carte"><h2>Courbe de résultat cumulé</h2><canvas id="j-graph"></canvas></div>
+      <button class="b" onclick="formTrade()">➕ Ajouter un trade</button>
+      <div class="carte" style="margin-top:12px"><h2>Historique</h2><div id="j-liste"></div></div>
+      <button class="b sec" onclick="exporterCSV()">📄 Exporter en CSV</button>
+    </section>
 
-<div class="box">
-  <h2>💰 Taille de Position</h2>
-  <div class="grid2">
-    <div>
-      <label>Capital (€)</label>
-      <input type="number" id="inp-capital" value="1000" min="0" step="1">
-    </div>
-    <div>
-      <label>Risque par trade (%)</label>
-      <input type="number" id="inp-risk" value="1" min="0.1" max="100" step="0.1">
-    </div>
-  </div>
-  <label>Prix d'entrée</label>
-  <input type="number" id="inp-entry" value="0" step="0.01">
-  <label>Stop-loss</label>
-  <input type="number" id="inp-stop" value="0" step="0.01">
-  <button class="btn-blue" onclick="calcPosition()">Calculer la taille</button>
-  <div style="margin-top:12px;">
-    <div class="metric"><span>Montant risqué</span><strong id="pos-risk">—</strong></div>
-    <div class="metric"><span>Quantité à acheter</span><strong id="pos-qty">—</strong></div>
-  </div>
+    <section id="v-plus" class="vue">
+      <div class="carte"><h2>Journal</h2><label>Devise du journal</label><select id="j-ccy" onchange="majJournal()"><option>EUR</option><option>USD</option></select></div>
+      <div class="carte"><h2>Sauvegarde</h2>
+        <div id="bak-info" class="info"></div>
+        <div class="g2"><button class="b vert" onclick="sauvegarder()">💾 Sauvegarder</button><button class="b sec" onclick="restaurer()">📥 Restaurer</button></div>
+        <div class="note">Le journal est stocké uniquement sur ce téléphone. Désinstaller l'application ou effacer ses données le supprime : sauvegardez régulièrement et conservez le fichier ailleurs.</div></div>
+      <div class="carte"><h2>À propos</h2>
+        <div class="note">Données de marché : Binance (crypto), Yahoo Finance puis Stooq (actions), parfois différées. Outil d'aide à la décision : aucun conseil en investissement. Le trading comporte un risque de perte en capital.</div>
+        <div class="note">Si l'application se ferme au démarrage, l'erreur exacte s'affiche au lancement suivant : copiez-la pour la transmettre.</div></div>
+    </section>
+  </main>
+  <nav>
+    <button id="n-marche" class="actif" onclick="vue('marche')"><b>📊</b>Marché</button>
+    <button id="n-calc" onclick="vue('calc')"><b>🧮</b>Calculs</button>
+    <button id="n-journal" onclick="vue('journal')"><b>📓</b>Journal</button>
+    <button id="n-plus" onclick="vue('plus')"><b>⚙️</b>Plus</button>
+  </nav>
 </div>
+<div id="overlay"><div id="modal"></div></div>
+<div id="toast"></div>
 
 <script>
-let market = 'crypto';
-let currentPrice = 0;
+// =====================================================================
+//  Utilitaires
+// =====================================================================
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+const nf = (n, d) => Number(n).toLocaleString('fr-FR', { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d });
+function fmtPrix(p) { const a = Math.abs(p); return nf(p, a >= 1 ? 2 : (a >= 0.01 ? 4 : 6)); }
+function fmtQty(q) { return q >= 100 ? nf(q, 2) : (q >= 1 ? nf(q, 4) : nf(q, 6)); }
+const SYMB = { USD: '$', EUR: '€' };
+const dev = c => SYMB[c] || c || '';
+const signe = (v, d) => (v >= 0 ? '+' : '') + nf(v, d);
+function lire(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function ecrire(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+let toastT = null;
+function toast(m) { const t = $('toast'); t.textContent = m; t.className = 'visible'; clearTimeout(toastT); toastT = setTimeout(() => { t.className = ''; }, 3500); }
+function modal(h) { $('modal').innerHTML = h; $('overlay').className = 'ouvert'; }
+function fermer() { $('overlay').className = ''; }
+function statut(s) { $('pt').className = 'pt ' + s; }
+const num = id => parseFloat(String($(id).value).replace(',', '.'));
 
-function setMarket(m) {
-  market = m;
-  document.getElementById('tab-crypto').className = m==='crypto' ? 'tab active' : 'tab';
-  document.getElementById('tab-stock').className = m==='stock' ? 'tab active' : 'tab';
-  const sel = document.getElementById('sel-asset');
-  if (m === 'crypto') {
-    sel.innerHTML = '<option value="bitcoin">BTC / USD</option><option value="ethereum">ETH / USD</option><option value="solana">SOL / USD</option>';
-  } else {
-    sel.innerHTML = '<option value="AAPL">Apple (AAPL)</option><option value="TSLA">Tesla (TSLA)</option><option value="MSFT">Microsoft (MSFT)</option>';
-  }
-  fetchPrice();
-}
-
-async function fetchPrice() {
-  const asset = document.getElementById('sel-asset').value;
-  document.getElementById('price-display').textContent = '⏳ chargement...';
-  try {
-    if (market === 'crypto') {
-      const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${asset}&vs_currencies=usd&include_24hr_change=true`);
-      const d = await r.json();
-      const p = d[asset].usd;
-      const ch = d[asset].usd_24h_change || 0;
-      currentPrice = p;
-      document.getElementById('price-display').textContent = '$' + p.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
-      const cEl = document.getElementById('change-display');
-      cEl.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '% (24h)';
-      cEl.className = ch >= 0 ? 'pos' : 'neg';
-      document.getElementById('change-display').style.textAlign = 'center';
-      await fetchCandles(asset);
+// =====================================================================
+//  Réseau : pont natif (sans blocage CORS) ou fetch en secours (test navigateur)
+// =====================================================================
+let httpN = 0; const httpAtt = {};
+window.__http = function (id, status, body) {
+  const p = httpAtt[id]; if (!p) return;
+  delete httpAtt[id]; clearTimeout(p.t);
+  if (status >= 200 && status < 300) { p.res(body); return; }
+  const e = new Error(status === 0 ? 'Réseau indisponible' : (status === -1 ? 'Serveur non autorisé' : 'Erreur serveur ' + status));
+  e.status = status; e.body = body; p.rej(e);
+};
+function http(url) {
+  return new Promise((res, rej) => {
+    if (window.AndroidBridge && AndroidBridge.httpGet) {
+      const id = 'h' + (++httpN);
+      httpAtt[id] = { res: res, rej: rej, t: setTimeout(() => { delete httpAtt[id]; const e = new Error('Délai dépassé'); e.status = 0; rej(e); }, 25000) };
+      AndroidBridge.httpGet(id, url);
     } else {
-      // Yahoo Finance via proxy public (fallback)
-      const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${asset}?range=1d&interval=1d`);
-      const d = await r.json();
-      const p = d.chart.result[0].meta.regularMarketPrice;
-      currentPrice = p;
-      document.getElementById('price-display').textContent = '$' + p.toFixed(2);
-      document.getElementById('change-display').textContent = 'Action — données 1 jour';
-      document.getElementById('change-display').className = '';
-      document.getElementById('change-display').style.textAlign = 'center';
+      fetch(url).then(async r => {
+        const t = await r.text();
+        if (!r.ok) { const e = new Error('Erreur serveur ' + r.status); e.status = r.status; throw e; }
+        return t;
+      }).then(res, rej);
     }
-  } catch(e) {
-    document.getElementById('price-display').textContent = '❌ Erreur réseau';
-    console.warn(e);
+  });
+}
+
+// =====================================================================
+//  Sources de données
+// =====================================================================
+const BIN = 'https://data-api.binance.vision/api/v3';
+function deviseCrypto(sym) { const m = sym.match(/(USDT|USDC|FDUSD|BUSD|EUR|BTC|ETH|BNB)$/); const q = m ? m[1] : 'USD'; return /USD/.test(q) ? 'USD' : q; }
+function normaliser(marche, s) {
+  s = String(s || '').trim().toUpperCase();
+  if (marche === 'crypto') { s = s.replace(/[^A-Z0-9]/g, ''); if (s && !/(USDT|USDC|FDUSD|BUSD|EUR|BTC|ETH|BNB)$/.test(s)) s += 'USDT'; return s; }
+  return s.replace(/[^A-Z0-9.\-=^]/g, '');
+}
+function parseKlines(arr) { return arr.map(r => ({ t: r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] })); }
+async function donneesCrypto(sym, tf) {
+  let k, t;
+  try { [k, t] = await Promise.all([http(BIN + '/klines?symbol=' + sym + '&interval=' + tf + '&limit=300'), http(BIN + '/ticker/24hr?symbol=' + sym)]); }
+  catch (e) { if (e.status === 400) throw new Error('Symbole inconnu sur Binance : ' + sym); throw e; }
+  const candles = parseKlines(JSON.parse(k)), tk = JSON.parse(t);
+  if (candles.length < 2) throw new Error('Pas assez de données');
+  return { candles: candles, info: { prix: +tk.lastPrice, var: +tk.priceChangePercent, haut: +tk.highPrice, bas: +tk.lowPrice, devise: deviseCrypto(sym), label: '24 h', source: 'Binance' } };
+}
+const YF = { '1h': ['60m', '1mo'], '1d': ['1d', '1y'], '1wk': ['1wk', '5y'] };
+function parseYahoo(j, tf) {
+  const r = j && j.chart && j.chart.result && j.chart.result[0];
+  if (!r) throw new Error('Données indisponibles');
+  const q = r.indicators.quote[0], ts = r.timestamp || [], candles = [];
+  for (let i = 0; i < ts.length; i++) {
+    if (q.close[i] == null || q.open[i] == null || q.high[i] == null || q.low[i] == null) continue;
+    candles.push({ t: ts[i] * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: (q.volume && q.volume[i]) || 0 });
+  }
+  if (candles.length < 2) throw new Error('Pas assez de données');
+  const m = r.meta || {}, last = candles[candles.length - 1], prix = m.regularMarketPrice != null ? m.regularMarketPrice : last.c, prev = candles[candles.length - 2].c;
+  return { candles: candles, info: { prix: prix, var: (prix / prev - 1) * 100, haut: m.regularMarketDayHigh != null ? m.regularMarketDayHigh : last.h, bas: m.regularMarketDayLow != null ? m.regularMarketDayLow : last.l,
+    devise: m.currency || 'USD', label: tf === '1wk' ? 'dernière semaine' : (tf === '1h' ? 'dernière heure' : 'veille'), source: 'Yahoo Finance' } };
+}
+function parseStooq(txt) {
+  const lines = String(txt).trim().split(/\r?\n/);
+  if (lines.length < 3 || !/^Date,/i.test(lines[0])) throw new Error('Données indisponibles');
+  const candles = [];
+  for (let i = 1; i < lines.length; i++) {
+    const p = lines[i].split(','), o = +p[1], h = +p[2], l = +p[3], c = +p[4];
+    if (!p[0] || isNaN(o) || isNaN(c)) continue;
+    candles.push({ t: Date.parse(p[0] + 'T00:00:00Z'), o: o, h: h, l: l, c: c, v: +p[5] || 0 });
+  }
+  const cs = candles.slice(-300);
+  if (cs.length < 2) throw new Error('Pas assez de données');
+  const last = cs[cs.length - 1], prev = cs[cs.length - 2];
+  return { candles: cs, info: { prix: last.c, var: (last.c / prev.c - 1) * 100, haut: last.h, bas: last.l, devise: 'USD', label: 'veille', source: 'Stooq (différé)' } };
+}
+async function donneesStooq(sym) {
+  const s = (sym.indexOf('.') >= 0 ? sym : sym + '.US').toLowerCase();
+  return parseStooq(await http('https://stooq.com/q/d/l/?s=' + encodeURIComponent(s) + '&i=d'));
+}
+async function donneesAction(sym, tf) {
+  const p = YF[tf] || YF['1d'];
+  try { return parseYahoo(JSON.parse(await http('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=' + p[1] + '&interval=' + p[0])), tf); }
+  catch (e) {
+    if (tf !== '1h') { try { return await donneesStooq(sym); } catch (e2) { /* on garde l'erreur d'origine */ } }
+    if (e.status === 404) throw new Error('Symbole inconnu : ' + sym);
+    throw e;
   }
 }
 
-async function fetchCandles(coinId) {
+// =====================================================================
+//  Indicateurs techniques (formules standard)
+// =====================================================================
+function sma(a, n) { const o = new Array(a.length).fill(null); let s = 0; for (let i = 0; i < a.length; i++) { s += a[i]; if (i >= n) s -= a[i - n]; if (i >= n - 1) o[i] = s / n; } return o; }
+function ema(a, n) {
+  const o = new Array(a.length).fill(null); if (a.length < n) return o;
+  let e = a.slice(0, n).reduce((x, y) => x + y, 0) / n; o[n - 1] = e; const k = 2 / (n + 1);
+  for (let i = n; i < a.length; i++) { e = a[i] * k + e * (1 - k); o[i] = e; } return o;
+}
+function rsi(c, n) { // lissage de Wilder
+  n = n || 14; if (c.length < n + 1) return null;
+  let g = 0, l = 0; for (let i = 1; i <= n; i++) { const d = c[i] - c[i - 1]; if (d >= 0) g += d; else l -= d; } g /= n; l /= n;
+  for (let i = n + 1; i < c.length; i++) { const d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; }
+  return l === 0 ? 100 : 100 - 100 / (1 + g / l);
+}
+function macd(c) {
+  const e12 = ema(c, 12), e26 = ema(c, 26), line = c.map((_, i) => (e12[i] != null && e26[i] != null) ? e12[i] - e26[i] : null);
+  const valid = line.filter(x => x != null), sv = ema(valid, 9), off = line.length - valid.length, sig = new Array(line.length).fill(null);
+  sv.forEach((v, i) => { if (v != null) sig[i + off] = v; });
+  const n = line.length - 1, h = i => (line[i] != null && sig[i] != null) ? line[i] - sig[i] : null;
+  return { line: line[n], signal: sig[n], hist: h(n), prevHist: h(n - 1) };
+}
+function bollinger(c, n, k) {
+  n = n || 20; k = k || 2; if (c.length < n) return null;
+  const w = c.slice(-n), m = w.reduce((x, y) => x + y, 0) / n, sd = Math.sqrt(w.reduce((x, y) => x + (y - m) * (y - m), 0) / n), up = m + k * sd, lo = m - k * sd, last = c[c.length - 1];
+  return { mid: m, up: up, low: lo, pctB: up === lo ? 0.5 : (last - lo) / (up - lo), bw: m ? (up - lo) / m : 0 };
+}
+function atr(cs, n) { // moyenne vraie de Wilder
+  n = n || 14; if (cs.length < n + 1) return null;
+  const tr = []; for (let i = 1; i < cs.length; i++) tr.push(Math.max(cs[i].h - cs[i].l, Math.abs(cs[i].h - cs[i - 1].c), Math.abs(cs[i].l - cs[i - 1].c)));
+  let a = tr.slice(0, n).reduce((x, y) => x + y, 0) / n; for (let i = n; i < tr.length; i++) a = (a * (n - 1) + tr[i]) / n; return a;
+}
+function indicateurs(cs) {
+  const c = cs.map(k => k.c), last = c[c.length - 1], at = (a) => a[a.length - 1];
+  const w = cs.slice(-52);
+  return { last: last, rsi: rsi(c), sma20: at(sma(c, 20)), sma50: at(sma(c, 50)), sma200: at(sma(c, 200)), ema12: at(ema(c, 12)), ema26: at(ema(c, 26)), macd: macd(c), boll: bollinger(c), atr: atr(cs),
+    hh: Math.max.apply(null, w.map(k => k.h)), ll: Math.min.apply(null, w.map(k => k.l)) };
+}
+function signaux(I) {
+  const S = [], add = (nom, etat, detail) => S.push({ nom: nom, etat: etat, detail: detail });
+  if (I.sma200 != null) add('Tendance longue', I.last > I.sma200 ? 'haussier' : 'baissier', 'Prix ' + (I.last > I.sma200 ? 'au-dessus' : 'sous') + ' la moyenne 200');
+  if (I.sma20 != null && I.sma50 != null) add('Moyennes 20 / 50', I.sma20 > I.sma50 ? 'haussier' : 'baissier', 'La moyenne 20 est ' + (I.sma20 > I.sma50 ? 'au-dessus' : 'sous') + ' la moyenne 50');
+  if (I.sma20 != null) add('Prix / moyenne 20', I.last > I.sma20 ? 'haussier' : 'baissier', 'Prix ' + (I.last > I.sma20 ? 'au-dessus' : 'sous') + ' la moyenne 20');
+  if (I.rsi != null) add('RSI 14', I.rsi >= 70 ? 'baissier' : (I.rsi <= 30 ? 'haussier' : 'neutre'), I.rsi >= 70 ? 'Surachat : risque de repli' : (I.rsi <= 30 ? 'Survente : rebond possible' : 'Zone neutre (30 à 70)'));
+  if (I.macd && I.macd.hist != null) {
+    const croise = I.macd.prevHist != null && Math.sign(I.macd.hist) !== Math.sign(I.macd.prevHist);
+    add('MACD', I.macd.hist > 0 ? 'haussier' : 'baissier', 'Histogramme ' + (I.macd.hist > 0 ? 'positif' : 'négatif') + (croise ? ' (croisement récent)' : ''));
+  }
+  if (I.boll) add('Bandes de Bollinger', I.boll.pctB > 1 ? 'baissier' : (I.boll.pctB < 0 ? 'haussier' : 'neutre'), I.boll.pctB > 1 ? 'Prix au-dessus de la bande haute (excès)' : (I.boll.pctB < 0 ? 'Prix sous la bande basse (excès)' : 'Prix dans les bandes'));
+  const sc = S.reduce((a, s) => a + (s.etat === 'haussier' ? 1 : (s.etat === 'baissier' ? -1 : 0)), 0);
+  return { liste: S, score: sc, verdict: sc >= 3 ? 'Biais haussier' : (sc <= -3 ? 'Biais baissier' : 'Signaux mitigés') };
+}
+
+// =====================================================================
+//  Marché : état, chargement, affichage
+// =====================================================================
+const S = { marche: 'crypto', sym: { crypto: 'BTCUSDT', actions: 'AAPL' }, tf: { crypto: '1d', actions: '1d' }, candles: [], info: null, ind: null, n: 80, sel: null, req: 0, auto: false, vue: 'marche', series: {} };
+let watch = lire('tt_watch', { crypto: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'], actions: ['AAPL', 'TSLA', 'MSFT'] });
+const TFS = { crypto: [['15m', '15 min'], ['1h', '1 heure'], ['4h', '4 heures'], ['1d', '1 jour'], ['1w', '1 semaine']], actions: [['1h', '1 heure'], ['1d', '1 jour'], ['1wk', '1 semaine']] };
+
+function remplirTf() {
+  $('tf').innerHTML = TFS[S.marche].map(t => '<option value="' + t[0] + '"' + (t[0] === S.tf[S.marche] ? ' selected' : '') + '>' + t[1] + '</option>').join('');
+  $('sym').placeholder = S.marche === 'crypto' ? 'BTCUSDT, ETHUSDT…' : 'AAPL, TSLA, MC.PA…';
+  $('sym').value = S.sym[S.marche];
+}
+function rendreChips() {
+  const cur = S.sym[S.marche], l = watch[S.marche] || [];
+  $('chips').innerHTML = l.map(s => '<span class="chipw' + (s === cur ? ' sel' : '') + '" onclick="choisirSymbole(\'' + esc(s) + '\')">' + esc(s) + '</span>').join('') || '<span class="note">Aucun favori : touchez ☆</span>';
+  $('btn-fav').textContent = l.indexOf(cur) >= 0 ? '⭐' : '☆';
+}
+function choisirMarche(m) { S.marche = m; $('m-crypto').className = m === 'crypto' ? 'actif' : ''; $('m-actions').className = m === 'actions' ? 'actif' : ''; remplirTf(); rendreChips(); chargerMarche(); }
+function choisirSymbole(s) { S.sym[S.marche] = s; $('sym').value = s; rendreChips(); chargerMarche(); }
+function chargerSaisie() { const s = normaliser(S.marche, $('sym').value); if (!s) return; choisirSymbole(s); }
+function changerTf() { S.tf[S.marche] = $('tf').value; chargerMarche(); }
+function basculerFavori() {
+  const l = watch[S.marche] = watch[S.marche] || [], s = S.sym[S.marche], i = l.indexOf(s);
+  if (i >= 0) l.splice(i, 1); else l.push(s);
+  ecrire('tt_watch', watch); rendreChips();
+}
+let timerAuto = null;
+function basculerAuto() {
+  S.auto = $('auto').checked; clearInterval(timerAuto);
+  if (S.auto) timerAuto = setInterval(() => { if (S.vue === 'marche' && !document.hidden) chargerMarche(true); }, 30000);
+}
+async function chargerMarche(silencieux) {
+  const id = ++S.req, sym = S.sym[S.marche], tf = S.tf[S.marche], marche = S.marche;
+  if (!silencieux) { statut('charge'); $('prix').textContent = '⏳'; }
   try {
-    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=30`);
-    const candles = await r.json();
-    if (!Array.isArray(candles) || candles.length < 50) return;
-    const closes = candles.map(c => c[4]);
-    // RSI(14) simplifié
-    let gains = 0, losses = 0;
-    for (let i = closes.length-14; i < closes.length; i++) {
-      const diff = closes[i] - closes[i-1];
-      if (diff >= 0) gains += diff; else losses -= diff;
-    }
-    const avgGain = gains/14, avgLoss = losses/14;
-    const rsi = avgLoss === 0 ? 100 : 100 - (100/(1 + avgGain/avgLoss));
-    // SMA
-    const sma = (arr, n) => arr.slice(-n).reduce((a,b)=>a+b,0)/n;
-    const sma20 = sma(closes, 20);
-    const sma50 = closes.length >= 50 ? sma(closes, 50) : null;
-    document.getElementById('rsi-val').textContent = rsi.toFixed(1);
-    document.getElementById('sma20-val').textContent = '$' + sma20.toFixed(2);
-    document.getElementById('sma50-val').textContent = sma50 ? '$' + sma50.toFixed(2) : 'N/A';
-    const last = closes[closes.length-1];
-    let sig = 'Neutre';
-    if (rsi < 30) sig = '🟢 Survente (achat potentiel)';
-    else if (rsi > 70) sig = '🔴 Surachat (vente potentielle)';
-    else if (sma50 && last > sma20 && sma20 > sma50) sig = '🟢 Tendance haussière';
-    else if (sma50 && last < sma20 && sma20 < sma50) sig = '🔴 Tendance baissière';
-    document.getElementById('signal-val').textContent = sig;
-  } catch(e) { console.warn('candles', e); }
-}
-
-function calcExpectancy() {
-  const wr = parseFloat(document.getElementById('inp-winrate').value) / 100;
-  const rr = parseFloat(document.getElementById('inp-rr').value);
-  if (isNaN(wr) || isNaN(rr) || wr < 0 || wr > 1 || rr <= 0) {
-    alert('Valeurs invalides'); return;
+    const d = marche === 'crypto' ? await donneesCrypto(sym, tf) : await donneesAction(sym, tf);
+    if (id !== S.req) return;           // une requête plus récente a pris le relais
+    S.candles = d.candles; S.info = d.info; S.sel = null;
+    const c = d.candles.map(k => k.c); S.series = { sma20: sma(c, 20), sma50: sma(c, 50) };
+    S.ind = indicateurs(d.candles);
+    statut('ok'); afficherMarche();
+  } catch (e) {
+    if (id !== S.req) return;
+    statut('err'); if (!silencieux) { $('prix').textContent = '—'; $('var').textContent = ''; $('hl').textContent = ''; }
+    toast(e.message || 'Erreur inconnue');
   }
-  const lr = 1 - wr;
-  const exp = (wr * rr) - (lr * 1); // en R
-  const el = document.getElementById('exp-result');
-  el.textContent = (exp >= 0 ? '+' : '') + exp.toFixed(3) + ' R par trade';
-  el.className = exp >= 0 ? 'pos' : 'neg';
-  const v = document.getElementById('exp-verdict');
-  if (exp > 0.2) { v.textContent = '✅ Système rentable'; v.className = 'pos'; }
-  else if (exp > 0) { v.textContent = '⚠️ Rentable mais faible'; v.className = 'pos'; }
-  else { v.textContent = '❌ Système perdant à long terme'; v.className = 'neg'; }
+}
+function afficherMarche() {
+  const I = S.info, ind = S.ind, d = dev(I.devise);
+  $('prix').textContent = d + ' ' + fmtPrix(I.prix);
+  $('var').innerHTML = '<span class="' + (I.var >= 0 ? 'pos' : 'neg') + '">' + signe(I.var, 2) + ' %</span> <span class="note">(' + esc(I.label) + ')</span>';
+  $('hl').textContent = 'Haut ' + fmtPrix(I.haut) + '  ·  Bas ' + fmtPrix(I.bas);
+  $('source').textContent = 'Source : ' + I.source + ' · ' + new Date().toLocaleTimeString('fr-FR') + ' · ' + S.candles.length + ' bougies';
+  const m = (a, b, cl) => '<div class="m"><span>' + a + '</span><span class="' + (cl || '') + '">' + b + '</span></div>';
+  const v = x => x == null ? 'n/d' : fmtPrix(x);
+  let h = '';
+  if (ind.rsi != null) h += m('RSI (14)', nf(ind.rsi, 1), ind.rsi >= 70 ? 'neg' : (ind.rsi <= 30 ? 'pos' : ''));
+  h += m('Moyenne 20', v(ind.sma20)) + m('Moyenne 50', v(ind.sma50)) + m('Moyenne 200', v(ind.sma200));
+  h += m('EMA 12 / 26', v(ind.ema12) + ' / ' + v(ind.ema26));
+  if (ind.macd && ind.macd.line != null) h += m('MACD', nf(ind.macd.line, 3) + ' (sig. ' + (ind.macd.signal == null ? 'n/d' : nf(ind.macd.signal, 3)) + ')', ind.macd.hist > 0 ? 'pos' : 'neg');
+  if (ind.boll) h += m('Bollinger %B', nf(ind.boll.pctB * 100, 0) + ' %') + m('Largeur des bandes', nf(ind.boll.bw * 100, 1) + ' %');
+  if (ind.atr != null) h += m('ATR (14)', fmtPrix(ind.atr) + ' (' + nf(ind.atr / ind.last * 100, 2) + ' %)');
+  h += m('Plus haut / bas 52 bougies', fmtPrix(ind.hh) + ' / ' + fmtPrix(ind.ll));
+  $('indic').innerHTML = h;
+  const sg = signaux(ind);
+  $('signaux').innerHTML = sg.liste.map(s => '<div class="sig"><i>' + (s.etat === 'haussier' ? '🟢' : (s.etat === 'baissier' ? '🔴' : '⚪')) + '</i><div><b>' + esc(s.nom) + '</b><br><span class="note">' + esc(s.detail) + '</span></div></div>').join('') || '<div class="note">Pas assez de bougies pour les signaux.</div>';
+  const vd = $('verdict'); vd.textContent = sg.verdict + ' (score ' + signe(sg.score, 0) + ')'; vd.className = 'verdict ' + (sg.score >= 3 ? 'pos' : (sg.score <= -3 ? 'neg' : 'neu'));
+  rendreChips(); dessiner();
 }
 
+// =====================================================================
+//  Graphique en bougies (canvas)
+// =====================================================================
+function zoom(d) { const L = [30, 50, 80, 120, 200, 300]; let i = L.indexOf(S.n); if (i < 0) i = 2; S.n = L[Math.max(0, Math.min(L.length - 1, i + d))]; dessiner(); }
+function dessiner() {
+  const cv = $('graph'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
+  const cs = S.candles; if (cs.length < 2) return;
+  const n = Math.min(S.n, cs.length), off = cs.length - n, vis = cs.slice(off);
+  const padR = 56, padB = 4, volH = H * 0.15, plotH = H - padB - volH - 4, plotW = W - padR, cw = plotW / n;
+  let hi = -Infinity, lo = Infinity; vis.forEach(k => { hi = Math.max(hi, k.h); lo = Math.min(lo, k.l); });
+  const m = (hi - lo) * 0.06 || hi * 0.01; hi += m; lo -= m;
+  const Y = p => (hi - p) / (hi - lo) * plotH, X = i => i * cw + cw / 2;
+  g.font = '10px sans-serif'; g.lineWidth = 1;
+  for (let k = 0; k <= 4; k++) { const p = lo + (hi - lo) * k / 4, y = Y(p); g.strokeStyle = '#243044'; g.beginPath(); g.moveTo(0, y); g.lineTo(plotW, y); g.stroke(); g.fillStyle = '#64748b'; g.fillText(fmtPrix(p), plotW + 3, y + 3); }
+  const vmax = Math.max.apply(null, vis.map(k => k.v)) || 1;
+  vis.forEach((k, i) => { g.fillStyle = k.c >= k.o ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'; const h = k.v / vmax * volH; g.fillRect(X(i) - cw * 0.35, H - padB - h, cw * 0.7, h); });
+  vis.forEach((k, i) => {
+    const up = k.c >= k.o; g.strokeStyle = g.fillStyle = up ? '#22c55e' : '#ef4444';
+    g.beginPath(); g.moveTo(X(i), Y(k.h)); g.lineTo(X(i), Y(k.l)); g.stroke();
+    const y1 = Y(Math.max(k.o, k.c)), y2 = Y(Math.min(k.o, k.c)); g.fillRect(X(i) - cw * 0.35, y1, Math.max(cw * 0.7, 1), Math.max(y2 - y1, 1));
+  });
+  [['sma20', '#f59e0b'], ['sma50', '#38bdf8']].forEach(s => {
+    const a = (S.series[s[0]] || []).slice(off); g.strokeStyle = s[1]; g.lineWidth = 1.3; g.beginPath(); let d = false;
+    a.forEach((v, i) => { if (v == null) return; if (!d) { g.moveTo(X(i), Y(v)); d = true; } else g.lineTo(X(i), Y(v)); }); g.stroke();
+  });
+  g.lineWidth = 1;
+  if (S.sel != null && S.sel >= off) { const i = S.sel - off; g.strokeStyle = '#94a3b8'; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(i), 0); g.lineTo(X(i), plotH); g.stroke(); g.setLineDash([]); }
+}
+function lireBougie(ev) {
+  const cv = $('graph'), r = cv.getBoundingClientRect(), x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+  const cs = S.candles; if (cs.length < 2) return;
+  const n = Math.min(S.n, cs.length), off = cs.length - n, plotW = r.width - 56;
+  const i = Math.max(0, Math.min(n - 1, Math.floor(x / plotW * n)));
+  S.sel = off + i; const k = cs[S.sel], p = i > 0 || off > 0 ? cs[S.sel - 1] : null;
+  $('graph-info').textContent = new Date(k.t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) +
+    '  O ' + fmtPrix(k.o) + '  H ' + fmtPrix(k.h) + '  B ' + fmtPrix(k.l) + '  C ' + fmtPrix(k.c) + (p ? '  (' + signe((k.c / p.c - 1) * 100, 2) + ' %)' : '');
+  dessiner();
+}
+function tracerLignes(cv, lignes, opt) {
+  opt = opt || {}; const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (!W || !H) return;
+  cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
+  let mn = Infinity, mx = -Infinity, n = 0;
+  lignes.forEach(l => { n = Math.max(n, l.pts.length); l.pts.forEach(v => { mn = Math.min(mn, v); mx = Math.max(mx, v); }); });
+  if (!isFinite(mn) || n < 2) { g.fillStyle = '#64748b'; g.font = '12px sans-serif'; g.fillText('Pas encore de données', 10, 22); return; }
+  if (opt.zero != null) { mn = Math.min(mn, opt.zero); mx = Math.max(mx, opt.zero); }
+  const mg = (mx - mn) * 0.08 || 1; mn -= mg; mx += mg;
+  const padL = 52, X = i => padL + i / (n - 1) * (W - padL - 6), Y = v => H - 12 - (v - mn) / (mx - mn) * (H - 22);
+  g.font = '10px sans-serif'; g.lineWidth = 1;
+  for (let k = 0; k <= 3; k++) { const v = mn + (mx - mn) * k / 3, y = Y(v); g.strokeStyle = '#243044'; g.beginPath(); g.moveTo(padL, y); g.lineTo(W - 6, y); g.stroke(); g.fillStyle = '#64748b'; g.fillText(opt.fmt ? opt.fmt(v) : nf(v, 0), 2, y + 3); }
+  if (opt.zero != null) { g.strokeStyle = '#64748b'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(padL, Y(opt.zero)); g.lineTo(W - 6, Y(opt.zero)); g.stroke(); g.setLineDash([]); }
+  lignes.forEach(l => { g.strokeStyle = l.c; g.lineWidth = l.w || 2; g.beginPath(); l.pts.forEach((v, i) => { if (i) g.lineTo(X(i), Y(v)); else g.moveTo(X(i), Y(v)); }); g.stroke(); });
+}
+
+// =====================================================================
+//  Taille de position
+// =====================================================================
+function versActif(m, o) { if (o.capCcy === o.assetCcy) return m; if (o.capCcy === 'EUR' && o.assetCcy === 'USD') return m * o.taux; if (o.capCcy === 'USD' && o.assetCcy === 'EUR') return m / o.taux; return m; }
+function versCap(m, o) { if (o.capCcy === o.assetCcy) return m; if (o.capCcy === 'EUR' && o.assetCcy === 'USD') return m / o.taux; if (o.capCcy === 'USD' && o.assetCcy === 'EUR') return m * o.taux; return m; }
+function calculerPosition(o) {
+  if (!(o.capital > 0) || !(o.riskPct > 0) || !(o.entry > 0) || !(o.stop > 0)) return { ok: false, erreur: 'Renseignez capital, risque, entrée et stop (valeurs > 0).' };
+  if (o.entry === o.stop) return { ok: false, erreur: 'Entrée et stop identiques.' };
+  if (o.capCcy !== o.assetCcy && !(o.taux > 0)) return { ok: false, erreur: 'Taux de change invalide.' };
+  const lev = o.lev >= 1 ? o.lev : 1, fr = (o.fee || 0) / 100, long = o.stop < o.entry;
+  const risqueCap = o.capital * o.riskPct / 100, risqueActif = versActif(risqueCap, o), dist = Math.abs(o.entry - o.stop);
+  const coutUnit = dist + (o.entry + o.stop) * fr;                 // perte par unité au stop, frais d'entrée et de sortie inclus
+  const brut = risqueActif / coutUnit, qty = o.entier ? Math.floor(brut) : Math.floor(brut * 1e6) / 1e6;
+  const notional = qty * o.entry, notionalCap = versCap(notional, o), marge = notionalCap / lev;
+  const fraisStop = qty * (o.entry + o.stop) * fr, perteStop = qty * dist + fraisStop;
+  const tp = [1, 2, 3].map(r => { const prix = long ? o.entry + r * dist : o.entry - r * dist; const gain = qty * r * dist - qty * (o.entry + prix) * fr; return { r: r, prix: prix, gain: versCap(gain, o) }; });
+  const al = [];
+  if (qty <= 0) al.push('Quantité nulle : le stop est trop large pour ce capital et ce risque' + (o.entier ? ' (actions entières)' : '') + '.');
+  if (marge > o.capital) al.push('Marge requise (' + nf(marge, 2) + ') supérieure au capital : réduisez le risque, rapprochez le stop ou augmentez le levier.');
+  if (o.riskPct > 5) al.push('Risque supérieur à 5 % par trade : une courte série de pertes peut entamer fortement le capital.');
+  if (dist / o.entry < 0.002) al.push('Stop très proche de l\'entrée (moins de 0,2 %) : il peut être déclenché par le simple bruit du marché et les frais pèsent lourd.');
+  let rr = null; if (o.target > 0) { const gd = long ? o.target - o.entry : o.entry - o.target; rr = gd > 0 ? gd / dist : null; if (gd <= 0) al.push('L\'objectif est du mauvais côté de l\'entrée pour cette position.'); }
+  return { ok: true, cote: long ? 'Achat (long)' : 'Vente à découvert (short)', qty: qty, notional: notional, notionalCap: notionalCap, risqueCap: risqueCap, perteStopCap: versCap(perteStop, o), fraisStopCap: versCap(fraisStop, o), marge: marge, tp: tp, rr: rr, alertes: al, dist: dist };
+}
 function calcPosition() {
-  const cap = parseFloat(document.getElementById('inp-capital').value);
-  const riskPct = parseFloat(document.getElementById('inp-risk').value) / 100;
-  const entry = parseFloat(document.getElementById('inp-entry').value);
-  const stop = parseFloat(document.getElementById('inp-stop').value);
-  if (isNaN(cap)||isNaN(riskPct)||isNaN(entry)||isNaN(stop)||entry<=0||stop<=0) {
-    alert('Remplis tous les champs (entrée et stop > 0)'); return;
-  }
-  if (entry === stop) { alert('Entrée et stop identiques'); return; }
-  const riskAmount = cap * riskPct;
-  const riskPerUnit = Math.abs(entry - stop);
-  const qty = riskAmount / riskPerUnit;
-  document.getElementById('pos-risk').textContent = riskAmount.toFixed(2) + ' €';
-  document.getElementById('pos-qty').textContent = qty.toFixed(6);
+  const o = { capital: num('p-capital'), capCcy: $('p-capccy').value, riskPct: num('p-risk'), fee: num('p-fee'), lev: num('p-lev'), assetCcy: $('p-assetccy').value, taux: num('p-taux'),
+    entry: num('p-entry'), stop: num('p-stop'), target: num('p-target'), entier: $('p-entier').checked };
+  const r = calculerPosition(o), R = $('p-res');
+  if (!r.ok) { R.innerHTML = '<div class="alerte">' + esc(r.erreur) + '</div>'; return; }
+  const m = (a, b, c) => '<div class="m"><span>' + a + '</span><span class="' + (c || '') + '">' + b + '</span></div>', cc = dev(o.capCcy), ac = dev(o.assetCcy);
+  let h = '<div style="margin-top:10px">' + m('Sens', r.cote) + m('Quantité', '<b>' + fmtQty(r.qty) + '</b>') + m('Valeur de la position', ac + nf(r.notional, 2) + (o.capCcy !== o.assetCcy ? ' (' + cc + nf(r.notionalCap, 2) + ')' : ''))
+    + m('Perte si le stop est touché', '−' + cc + nf(r.perteStopCap, 2), 'neg') + m('dont frais estimés', cc + nf(r.fraisStopCap, 2)) + m('Marge requise', cc + nf(r.marge, 2) + (r.marge > o.capital ? ' ⚠️' : ''), r.marge > o.capital ? 'neg' : '');
+  r.tp.forEach(t => { h += m('Objectif ' + t.r + 'R · ' + fmtPrix(t.prix), '+' + cc + nf(t.gain, 2), 'pos'); });
+  if (r.rr != null) h += m('R:R de votre objectif', nf(r.rr, 2), r.rr >= 2 ? 'pos' : (r.rr >= 1 ? 'neu' : 'neg'));
+  h += '</div>' + r.alertes.map(a => '<div class="alerte">⚠️ ' + esc(a) + '</div>').join('');
+  R.innerHTML = h;
+}
+async function tauxEURUSD() {
+  try { const t = JSON.parse(await http(BIN + '/ticker/price?symbol=EURUSDT')); const v = +t.price; if (v > 0) { $('p-taux').value = v.toFixed(4); persister(); } } catch (e) { /* on garde la valeur saisie */ }
+}
+function versCalculateur() {
+  if (!S.info) { toast('Chargez d\'abord un actif'); return; }
+  const I = S.info, ind = S.ind;
+  $('p-entry').value = I.prix; $('p-assetccy').value = I.devise === 'EUR' ? 'EUR' : 'USD'; $('p-entier').checked = S.marche === 'actions';
+  $('p-fee').value = S.marche === 'crypto' ? '0.1' : '0';
+  if (ind && ind.atr) $('p-stop').value = +(I.prix - 1.5 * ind.atr).toPrecision(6);
+  $('p-target').value = '';
+  vue('calc'); choisirCalc('pos'); persister();
+  if ($('p-capccy').value !== $('p-assetccy').value) tauxEURUSD();
+  toast('Stop pré-rempli à 1,5 × ATR : ajustez-le à votre analyse');
 }
 
-// Init
-fetchPrice();
+// =====================================================================
+//  Espérance, Kelly et simulation de Monte-Carlo
+// =====================================================================
+function calculerEsperance(wr, rr, n) {
+  const p = wr / 100, q = 1 - p, exp = p * rr - q;
+  const pf = q === 0 ? Infinity : (p * rr) / q, be = 100 / (1 + rr), kelly = p - q / rr;
+  const serie = q <= 0 ? 0 : (p <= 0 ? n : Math.max(1, Math.log(Math.max(n * p, 1)) / Math.log(1 / q)));
+  return { exp: exp, pf: pf, breakeven: be, kelly: kelly, serie: serie };
+}
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function simuler(wr, rr, riskPct, n, runs, rnd) {
+  const p = wr / 100, f = riskPct / 100, chemins = [], finals = [], mdds = [];
+  for (let r = 0; r < runs; r++) {
+    let eq = 100, pic = 100, mdd = 0; const ch = [100];
+    for (let i = 0; i < n; i++) { eq *= rnd() < p ? 1 + f * rr : 1 - f; ch.push(eq); if (eq > pic) pic = eq; const dd = (pic - eq) / pic; if (dd > mdd) mdd = dd; }
+    chemins.push(ch); finals.push(eq); mdds.push(mdd);
+  }
+  const pc = (arr, q) => { const s = arr.slice().sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(q * s.length))]; };
+  const bande = q => { const o = []; for (let i = 0; i <= n; i++) o.push(pc(chemins.map(c => c[i]), q)); return o; };
+  return { medFinal: pc(finals, 0.5), p5: pc(finals, 0.05), p95: pc(finals, 0.95), probPerte: finals.filter(x => x < 100).length / runs, medMDD: pc(mdds, 0.5), p95MDD: pc(mdds, 0.95),
+    probRuine50: mdds.filter(x => x >= 0.5).length / runs, bandes: { med: bande(0.5), p5: bande(0.05), p95: bande(0.95) } };
+}
+function calcEsperance() {
+  const wr = num('e-wr'), rr = num('e-rr'), rk = num('e-risk'), n = Math.round(num('e-n'));
+  if (!(wr >= 0 && wr <= 100) || !(rr > 0) || !(rk > 0 && rk <= 100) || !(n >= 10 && n <= 500)) { $('e-res').innerHTML = '<div class="alerte">Valeurs invalides (réussite 0–100 %, R:R > 0, risque 0–100 %, 10 à 500 trades).</div>'; return; }
+  const E = calculerEsperance(wr, rr, n), M = simuler(wr, rr, rk, n, 500, mulberry32(Date.now() & 0xffffffff));
+  const m = (a, b, c) => '<div class="m"><span>' + a + '</span><span class="' + (c || '') + '">' + b + '</span></div>';
+  let h = '<div style="margin-top:10px">' + m('Espérance par trade', signe(E.exp, 3) + ' R', E.exp > 0 ? 'pos' : 'neg')
+    + m('Verdict', E.exp > 0.2 ? '✅ Avantage statistique' : (E.exp > 0 ? '⚠️ Avantage faible' : '❌ Perdant à long terme'), E.exp > 0.2 ? 'pos' : (E.exp > 0 ? 'neu' : 'neg'))
+    + m('Facteur de profit', isFinite(E.pf) ? nf(E.pf, 2) : '∞') + m('Réussite minimale pour l\'équilibre', nf(E.breakeven, 1) + ' %')
+    + m('Série de pertes probable (' + n + ' trades)', '≈ ' + nf(E.serie, 0) + ' d\'affilée')
+    + m('Kelly (plein / ½ / ¼)', E.kelly > 0 ? nf(E.kelly * 100, 1) + ' % / ' + nf(E.kelly * 50, 1) + ' % / ' + nf(E.kelly * 25, 1) + ' %' : 'aucun avantage', E.kelly > 0 ? '' : 'neg') + '</div>';
+  h += '<h2 style="margin-top:14px">Simulation (500 parcours de ' + n + ' trades)</h2>' + m('Capital final médian', nf(M.medFinal, 0) + ' % du départ', M.medFinal >= 100 ? 'pos' : 'neg')
+    + m('Scénario défavorable (5 %) / favorable (95 %)', nf(M.p5, 0) + ' % / ' + nf(M.p95, 0) + ' %') + m('Probabilité de finir en perte', nf(M.probPerte * 100, 0) + ' %', M.probPerte > 0.5 ? 'neg' : '')
+    + m('Perte maximale médiane / pire cas (95 %)', nf(M.medMDD * 100, 0) + ' % / ' + nf(M.p95MDD * 100, 0) + ' %', M.p95MDD > 0.3 ? 'neg' : '') + m('Probabilité de perdre la moitié du capital', nf(M.probRuine50 * 100, 1) + ' %', M.probRuine50 > 0.05 ? 'neg' : '');
+  h += '<div class="info">Le critère de Kelly donne la mise théorique qui maximise la croissance, mais il est très sensible à une erreur d\'estimation du taux de réussite : on utilise rarement plus du quart ou de la moitié. Cette simulation suppose des trades indépendants et un taux de réussite stable : la réalité est moins régulière.</div>';
+  $('e-res').innerHTML = h;
+  const cv = $('e-graph'); cv.style.display = 'block';
+  tracerLignes(cv, [{ pts: M.bandes.p95, c: '#22c55e', w: 1 }, { pts: M.bandes.med, c: '#38bdf8', w: 2 }, { pts: M.bandes.p5, c: '#ef4444', w: 1 }], { zero: 100, fmt: v => nf(v, 0) + '%' });
+}
+function choisirCalc(c) {
+  $('calc-pos').style.display = c === 'pos' ? 'block' : 'none'; $('calc-esp').style.display = c === 'esp' ? 'block' : 'none';
+  $('c-pos').className = c === 'pos' ? 'actif' : ''; $('c-esp').className = c === 'esp' ? 'actif' : '';
+}
+
+// =====================================================================
+//  Journal de trades
+// =====================================================================
+let journal = lire('tt_journal', []);
+function pnlTrade(t) { return (t.exit - t.entry) * t.qty * (t.side === 'long' ? 1 : -1) - (t.fees || 0); }
+function rTrade(t) { if (!(t.stop > 0)) return null; const r = Math.abs(t.entry - t.stop) * t.qty; return r > 0 ? pnlTrade(t) / r : null; }
+function statsJournal(tr) {
+  const L = tr.slice().sort((a, b) => a.ts - b.ts), p = L.map(pnlTrade), n = L.length;
+  const gains = p.filter(x => x > 0), pertes = p.filter(x => x <= 0), sG = gains.reduce((a, b) => a + b, 0), sP = -pertes.reduce((a, b) => a + b, 0);
+  const rs = L.map(rTrade).filter(x => x != null), total = p.reduce((a, b) => a + b, 0);
+  const cum = []; let s = 0, pic = 0, dd = 0; p.forEach(x => { s += x; cum.push(s); if (s > pic) pic = s; if (pic - s > dd) dd = pic - s; });
+  return { n: n, wins: gains.length, winrate: n ? gains.length / n * 100 : 0, total: total, expectancy: n ? total / n : 0, avgW: gains.length ? sG / gains.length : 0, avgL: pertes.length ? -sP / pertes.length : 0,
+    pf: sP > 0 ? sG / sP : (sG > 0 ? Infinity : 0), avgR: rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null, nR: rs.length, maxDD: dd, cum: cum, best: n ? Math.max.apply(null, p) : 0, worst: n ? Math.min.apply(null, p) : 0 };
+}
+function majJournal() {
+  const c = dev($('j-ccy').value), st = statsJournal(journal), box = (a, b, cl) => '<div class="stat"><small>' + a + '</small><b class="' + (cl || '') + '">' + b + '</b></div>';
+  $('j-stats').innerHTML = box('Trades', st.n) + box('Réussite', st.n ? nf(st.winrate, 0) + ' %' : '—') + box('Résultat total', st.n ? signe(st.total, 2) + ' ' + c : '—', st.total >= 0 ? 'pos' : 'neg')
+    + box('Espérance / trade', st.n ? signe(st.expectancy, 2) + ' ' + c : '—', st.expectancy >= 0 ? 'pos' : 'neg') + box('Facteur de profit', st.n ? (isFinite(st.pf) ? nf(st.pf, 2) : '∞') : '—')
+    + box('R moyen', st.avgR == null ? '—' : signe(st.avgR, 2) + ' R', st.avgR >= 0 ? 'pos' : 'neg') + box('Gain / perte moyens', st.n ? nf(st.avgW, 0) + ' / ' + nf(st.avgL, 0) : '—') + box('Baisse max. du cumul', st.n ? nf(st.maxDD, 2) + ' ' + c : '—', st.maxDD > 0 ? 'neg' : '');
+  tracerLignes($('j-graph'), [{ pts: [0].concat(st.cum), c: st.total >= 0 ? '#22c55e' : '#ef4444', w: 2 }], { zero: 0, fmt: v => nf(v, 0) });
+  const L = journal.slice().sort((a, b) => b.ts - a.ts);
+  $('j-liste').innerHTML = L.map(t => { const pn = pnlTrade(t), r = rTrade(t);
+    return '<div class="trade"><div><b>' + esc(t.symbol) + '</b> ' + (t.side === 'long' ? '🟢 achat' : '🔴 vente') + '<small>' + new Date(t.ts).toLocaleDateString('fr-FR') + ' · ' + fmtPrix(t.entry) + ' → ' + fmtPrix(t.exit) + ' × ' + fmtQty(t.qty) + (t.notes ? '<br>' + esc(t.notes) : '') + '</small></div>'
+      + '<div style="text-align:right"><span class="' + (pn >= 0 ? 'pos' : 'neg') + '">' + signe(pn, 2) + ' ' + c + '</span><small>' + (r == null ? '' : signe(r, 2) + ' R') + '</small><small style="margin-top:4px"><a href="#" style="color:#94a3b8" onclick="supprimerTrade(' + t.id + ');return false">supprimer</a></small></div></div>'; }).join('') || '<div class="note">Aucun trade enregistré.</div>';
+}
+function formTrade() {
+  const sym = S.info ? S.sym[S.marche] : '', today = new Date().toISOString().slice(0, 10);
+  modal('<h2>Nouveau trade clôturé</h2><label>Actif</label><input id="t-sym" type="text" value="' + esc(sym) + '" autocapitalize="characters">'
+    + '<div class="g2"><div><label>Sens</label><select id="t-side"><option value="long">Achat (long)</option><option value="short">Vente (short)</option></select></div><div><label>Date</label><input id="t-date" type="date" value="' + today + '"></div></div>'
+    + '<div class="g3"><div><label>Entrée</label><input id="t-entry" type="number" step="any" inputmode="decimal"></div><div><label>Sortie</label><input id="t-exit" type="number" step="any" inputmode="decimal"></div><div><label>Quantité</label><input id="t-qty" type="number" step="any" inputmode="decimal"></div></div>'
+    + '<div class="g2"><div><label>Frais totaux</label><input id="t-fees" type="number" step="any" value="0" inputmode="decimal"></div><div><label>Stop initial (option)</label><input id="t-stop" type="number" step="any" inputmode="decimal"></div></div>'
+    + '<label>Notes</label><textarea id="t-notes" rows="2" placeholder="Raison d\'entrée, erreur, émotion…"></textarea>'
+    + '<div class="g2"><button class="b sec" onclick="fermer()">Annuler</button><button class="b vert" onclick="enregistrerTrade()">Enregistrer</button></div>');
+}
+function enregistrerTrade() {
+  const t = { id: Date.now(), symbol: $('t-sym').value.trim().toUpperCase(), side: $('t-side').value, entry: num('t-entry'), exit: num('t-exit'), qty: num('t-qty'), fees: num('t-fees') || 0, stop: num('t-stop') || null,
+    notes: $('t-notes').value.trim().slice(0, 300), ts: Date.parse($('t-date').value + 'T12:00:00') || Date.now() };
+  if (!t.symbol || !(t.entry > 0) || !(t.exit > 0) || !(t.qty > 0)) { alert('Renseignez l\'actif, l\'entrée, la sortie et la quantité (valeurs > 0).'); return; }
+  journal.push(t); if (!ecrire('tt_journal', journal)) alert('Sauvegarde locale impossible.');
+  fermer(); majJournal(); majBackupInfo(); toast('Trade enregistré');
+}
+function supprimerTrade(id) {
+  if (!confirm('Supprimer ce trade ?')) return;
+  journal = journal.filter(t => t.id !== id); ecrire('tt_journal', journal); majJournal(); majBackupInfo();
+}
+
+// =====================================================================
+//  Sauvegarde, restauration, export CSV
+// =====================================================================
+function lireEntrees() { const o = {}; PERSIST.forEach(id => { const e = $(id); if (e) o[id] = e.type === 'checkbox' ? e.checked : e.value; }); return o; }
+function construireSauvegarde() { return JSON.stringify({ app: 'TradeTools', version: 1, date: new Date().toISOString(), journal: journal, watch: watch, entrees: lireEntrees() }, null, 1); }
+function sauverFichier(nom, mime, contenu) {
+  if (window.AndroidBridge && AndroidBridge.saveFile) { AndroidBridge.saveFile(nom, mime, contenu); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([contenu], { type: mime })); a.download = nom; a.click(); window.__onSaved(true);
+}
+let derniereSauve = lire('tt_bak', 0);
+window.__onSaved = function (ok) {
+  if (ok) { derniereSauve = Date.now(); ecrire('tt_bak', derniereSauve); majBackupInfo(); toast('Fichier enregistré'); } else alert('Échec de l\'enregistrement. Réessayez.');
+};
+function sauvegarder() { sauverFichier('TradeTools_' + new Date().toISOString().slice(0, 10) + '.json', 'application/json', construireSauvegarde()); }
+function restaurer() {
+  if (window.AndroidBridge && AndroidBridge.pickFile) { AndroidBridge.pickFile(); return; }
+  const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
+  i.onchange = () => { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => window.__onPicked(String(r.result)); r.readAsText(f); }; i.click();
+}
+window.__onPicked = function (txt) {
+  let d = null; try { d = txt ? JSON.parse(txt) : null; } catch (e) { d = null; }
+  if (!d || d.app !== 'TradeTools' || !Array.isArray(d.journal)) { alert('Fichier invalide : ce n\'est pas une sauvegarde Trade Tools.'); return; }
+  if (!confirm('Restaurer cette sauvegarde (' + d.journal.length + ' trade(s)) ?\nLes données actuelles seront REMPLACÉES.')) return;
+  journal = d.journal.filter(t => t && t.symbol && t.entry > 0 && t.exit > 0 && t.qty > 0);
+  if (d.watch && d.watch.crypto && d.watch.actions) watch = d.watch;
+  if (d.entrees) PERSIST.forEach(id => { const e = $(id); if (e && d.entrees[id] != null) { if (e.type === 'checkbox') e.checked = !!d.entrees[id]; else e.value = d.entrees[id]; } });
+  ecrire('tt_journal', journal); ecrire('tt_watch', watch); persister(); majJournal(); rendreChips(); window.__onSaved(true); toast('Sauvegarde restaurée');
+};
+function majBackupInfo() {
+  const depuis = journal.filter(t => t.id > derniereSauve).length, e = $('bak-info');
+  if (!derniereSauve) { e.className = journal.length ? 'alerte' : 'info'; e.textContent = journal.length ? '⚠️ Aucune sauvegarde : vos ' + journal.length + ' trade(s) sont uniquement sur ce téléphone.' : 'Aucune sauvegarde pour l\'instant.'; return; }
+  e.className = depuis ? 'alerte' : 'info'; e.textContent = 'Dernier fichier : ' + new Date(derniereSauve).toLocaleString('fr-FR') + (depuis ? ' — ⚠️ ' + depuis + ' trade(s) ajouté(s) depuis' : ' — à jour');
+}
+function exporterCSV() {
+  if (!journal.length) { toast('Aucun trade à exporter'); return; }
+  const c = x => String(x == null ? '' : x).replace('.', ','), q = s => '"' + String(s || '').replace(/"/g, '""') + '"';
+  const L = ['Date;Actif;Sens;Entree;Sortie;Quantite;Frais;Stop;Resultat;R;Notes'].concat(journal.slice().sort((a, b) => a.ts - b.ts).map(t => [new Date(t.ts).toISOString().slice(0, 10), t.symbol, t.side, c(t.entry), c(t.exit), c(t.qty), c(t.fees), c(t.stop), c(+pnlTrade(t).toFixed(2)), c(rTrade(t) == null ? '' : +rTrade(t).toFixed(2)), q(t.notes)].join(';')));
+  sauverFichier('TradeTools_journal_' + new Date().toISOString().slice(0, 10) + '.csv', 'text/csv', '\uFEFF' + L.join('\r\n'));
+}
+
+// =====================================================================
+//  Navigation et mémorisation des saisies
+// =====================================================================
+const PERSIST = ['p-capital', 'p-capccy', 'p-risk', 'p-fee', 'p-lev', 'p-assetccy', 'p-taux', 'p-entry', 'p-stop', 'p-target', 'p-entier', 'e-wr', 'e-rr', 'e-risk', 'e-n', 'j-ccy'];
+function persister() { ecrire('tt_entrees', lireEntrees()); }
+function vue(v) {
+  S.vue = v; ['marche', 'calc', 'journal', 'plus'].forEach(x => { $('v-' + x).className = 'vue' + (x === v ? ' actif' : ''); $('n-' + x).className = x === v ? 'actif' : ''; });
+  if (v === 'marche') setTimeout(dessiner, 30); if (v === 'journal') setTimeout(majJournal, 30);
+}
+(function demarrer() {
+  const e = lire('tt_entrees', {});
+  PERSIST.forEach(id => { const el = $(id); if (!el) return; if (e[id] != null) { if (el.type === 'checkbox') el.checked = !!e[id]; else el.value = e[id]; } el.addEventListener('change', persister); });
+  const cv = $('graph'); ['pointerdown', 'pointermove'].forEach(t => cv.addEventListener(t, lireBougie));
+  window.addEventListener('resize', () => { dessiner(); if (S.vue === 'journal') majJournal(); });
+  remplirTf(); rendreChips(); majJournal(); majBackupInfo(); chargerMarche();
+})();
 </script>
 </body>
 </html>
