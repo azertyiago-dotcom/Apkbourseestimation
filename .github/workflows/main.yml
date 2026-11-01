@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,36 +16,66 @@ jobs:
       - name: 1. Checkout du code
         uses: actions/checkout@v4
 
-      - name: 2. Setup Java 17
+      - name: 2. Vérification des fichiers du projet
+        run: |
+          echo "=== Arborescence du dépôt ==="
+          find . -path ./.git -prune -o -type f -print | sort | head -80
+          erreurs=0
+          for f in index.html AndroidManifest.xml build.gradle gradle.properties \
+                   src/main/java/com/monentreprise/tradertools/MainActivity.java; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Fichier manquant ou mal placé : $f"
+              erreurs=1
+            fi
+          done
+          if ! grep -rq "Theme.TradeTools" src/main/res/values 2>/dev/null; then
+            echo "::error::Le thème Theme.TradeTools est introuvable dans src/main/res/values/ (themes.xml)"
+            erreurs=1
+          fi
+          [ "$erreurs" = 0 ] || exit 1
+          echo "Tous les fichiers requis sont présents."
+
+      - name: 3. Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 3. Setup Android SDK
+      - name: 4. Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools'
 
-      - name: 4. Setup Gradle
+      - name: 5. Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: 5. Préparation de l'arborescence
+      - name: 6. Préparation de l'arborescence
         run: |
-          mkdir -p src/main/java/com/monentreprise/tradertools
           mkdir -p src/main/assets
-          mkdir -p src/main/res/values
-          mkdir -p src/main/res/xml
           cp index.html src/main/assets/index.html
 
-      - name: 6. Compilation de l'APK
+      - name: 7. Compilation de l'APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: 7. Upload de l'APK
+      - name: 8. Contrôle du contenu de l'APK
+        run: |
+          APK=$(ls build/outputs/apk/debug/*.apk | head -1)
+          echo "APK : $APK"
+          unzip -l "$APK" | grep -q "assets/index.html" || { echo "::error::index.html est absent de l'APK"; exit 1; }
+          unzip -p "$APK" 'classes*.dex' | grep -aq "com/monentreprise/tradertools/MainActivity" || {
+            echo "::error::La classe MainActivity est absente de l'APK : MainActivity.java n'a pas été compilé (vérifiez son dossier : src/main/java/com/monentreprise/tradertools/)"
+            exit 1
+          }
+          echo "APK conforme : page d'accueil et MainActivity présentes."
+          mkdir -p sortie
+          cp "$APK" sortie/Trade-Tools.apk
+
+      - name: 9. Upload de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: Trade-Tools-APK
-          path: build/outputs/apk/debug/*.apk
+          path: sortie/Trade-Tools.apk
           retention-days: 30
+          if-no-files-found: error
