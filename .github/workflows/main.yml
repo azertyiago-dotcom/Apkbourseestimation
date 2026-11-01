@@ -41,6 +41,32 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: 3b. Préparation de la clé de signature
+        run: |
+          # La clé est fournie en texte (cle-signature.txt ou trade-tools.keystore.b64) : un fichier binaire s'abîme facilement à l'envoi.
+          for f in cle-signature.txt trade-tools.keystore.b64; do
+            if [ -e "$f" ]; then
+              if [ -s "$f" ] && base64 -d "$f" > /tmp/cle.bin 2>/dev/null && [ -s /tmp/cle.bin ]; then
+                cp /tmp/cle.bin trade-tools.keystore
+                echo "Clé reconstruite depuis $f"
+                break
+              else
+                echo "::warning::Le fichier $f est vide ou incomplet : il est ignoré."
+              fi
+            fi
+          done
+          if [ -f trade-tools.keystore ]; then
+            MDP=$(sed -n "s/.*storePassword '\([^']*\)'.*/\1/p" build.gradle | head -1)
+            if keytool -list -keystore trade-tools.keystore -storepass "$MDP" -alias tradetools >/dev/null 2>&1; then
+              echo "Clé de signature valide : signature stable activée."
+            else
+              echo "::warning::trade-tools.keystore est illisible (fichier abîmé à l'envoi ?). Signature par défaut utilisée : désinstallez l'ancienne version avant chaque installation."
+              rm -f trade-tools.keystore
+            fi
+          else
+            echo "Aucune clé fournie : signature par défaut."
+          fi
+
       - name: 4. Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
