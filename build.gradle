@@ -12,14 +12,13 @@ buildscript {
     }
 }
 
-// ⚠️ OBLIGATOIRE : résolution des dépendances (appcompat, webkit…)
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
 
-    // ✅ Correction du conflit Kotlin (classes dupliquées jdk7/jdk8)
+    // Correction du conflit Kotlin (classes dupliquées jdk7/jdk8)
     configurations.all {
         resolutionStrategy {
             force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
@@ -39,8 +38,23 @@ android {
         applicationId "com.monentreprise.tradertools"
         minSdk 23
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "2.0"
+    }
+
+    // Signature STABLE : chaque build porte la même signature, donc une nouvelle version
+    // s'installe par-dessus l'ancienne sans désinstaller (et sans perdre le journal de trades).
+    // Si le fichier trade-tools.keystore est absent, Android utilise sa clé de debug habituelle.
+    signingConfigs {
+        debug {
+            def cle = file('trade-tools.keystore')
+            if (cle.exists()) {
+                storeFile cle
+                storePassword 'f8e91b61e46bddd64d'
+                keyAlias 'tradetools'
+                keyPassword 'f8e91b61e46bddd64d'
+            }
+        }
     }
 
     buildTypes {
@@ -72,8 +86,7 @@ android {
         noCompress 'html', 'js', 'css'
     }
 
-    // ✅ Ignore les métadonnées AAR inutiles (évite des warnings sur les libs obsolètes)
-    packagingOptions {
+    packaging {
         resources {
             excludes += ['META-INF/*.kotlin_module', 'META-INF/DEPENDENCIES']
         }
@@ -82,4 +95,5 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.activity:activity:1.8.2'
 }
