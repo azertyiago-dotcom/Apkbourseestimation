@@ -1,12 +1,32 @@
+// ============================================================
+// build.gradle — Trade Tools (racine)
+// ============================================================
+
 buildscript {
-    repositories { google(); mavenCentral() }
-    dependencies { classpath 'com.android.tools.build:gradle:8.5.2' }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.5.2'
+    }
 }
+
+// ⚠️ Ce bloc est OBLIGATOIRE pour résoudre les dépendances
+// comme androidx.appcompat:appcompat (sinon erreur "no repositories are defined")
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 apply plugin: 'com.android.application'
 
 android {
     namespace 'com.monentreprise.tradertools'
     compileSdk 34
+
     defaultConfig {
         applicationId "com.monentreprise.tradertools"
         minSdk 23
@@ -14,10 +34,22 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -26,8 +58,13 @@ android {
             res.srcDirs = ['src/main/res']
         }
     }
-    androidResources { noCompress 'html', 'js', 'css' }
+
+    // Empêche la compression des assets lus par la WebView
+    androidResources {
+        noCompress 'html', 'js', 'css'
+    }
 }
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
 }
