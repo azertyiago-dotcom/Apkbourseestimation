@@ -12,12 +12,20 @@ buildscript {
     }
 }
 
-// ⚠️ Ce bloc est OBLIGATOIRE pour résoudre les dépendances
-// comme androidx.appcompat:appcompat (sinon erreur "no repositories are defined")
+// ⚠️ OBLIGATOIRE : résolution des dépendances (appcompat, webkit…)
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+
+    // ✅ Correction du conflit Kotlin (classes dupliquées jdk7/jdk8)
+    configurations.all {
+        resolutionStrategy {
+            force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+        }
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
     }
 }
 
@@ -62,6 +70,13 @@ android {
     // Empêche la compression des assets lus par la WebView
     androidResources {
         noCompress 'html', 'js', 'css'
+    }
+
+    // ✅ Ignore les métadonnées AAR inutiles (évite des warnings sur les libs obsolètes)
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/*.kotlin_module', 'META-INF/DEPENDENCIES']
+        }
     }
 }
 
