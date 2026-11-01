@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Trade Tools</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+body { background: #0f172a; color: #e2e8f0; padding: 15px; padding-bottom: 40px; }
+.box { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+h2 { font-size: 13px; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+label { display: block; font-size: 11px; font-weight: bold; margin: 8px 0 4px; color: #94a3b8; }
+input, select { width: 100%; padding: 10px; border: 1px solid #475569; border-radius: 6px; font-size: 14px; background: #0f172a; color: #e2e8f0; }
+button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+.btn-blue { background: #2563eb; color: white; }
+.btn-green { background: #16a34a; color: white; }
+.btn-gray { background: #334155; color: #e2e8f0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
+.metric:last-child { border-bottom: none; }
+.metric strong { color: #e2e8f0; }
+.pos { color: #22c55e; font-weight: bold; }
+.neg { color: #ef4444; font-weight: bold; }
+.hint { font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.4; }
+.tabs { display: flex; gap: 5px; background: #0f172a; padding: 3px; border-radius: 6px; margin-bottom: 10px; }
+.tab { flex: 1; text-align: center; padding: 7px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; color: #94a3b8; }
+.tab.active { background: #2563eb; color: white; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>📊 Marché</h2>
+  <div class="tabs">
+    <div id="tab-crypto" class="tab active" onclick="setMarket('crypto')">₿ Crypto</div>
+    <div id="tab-stock" class="tab" onclick="setMarket('stock')">📈 Action</div>
+  </div>
+  <label>Actif</label>
+  <select id="sel-asset">
+    <option value="bitcoin">BTC / USD</option>
+    <option value="ethereum">ETH / USD</option>
+    <option value="solana">SOL / USD</option>
+  </select>
+  <button class="btn-gray" onclick="fetchPrice()">🔄 Actualiser le prix</button>
+  <div id="price-display" style="text-align:center; font-size:26px; font-weight:bold; margin-top:12px; color:#38bdf8;">—</div>
+  <div id="change-display" style="text-align:center; font-size:13px; margin-top:4px;">—</div>
+</div>
+
+<div class="box">
+  <h2>📐 Indicateurs Techniques</h2>
+  <div id="indicators">
+    <div class="metric"><span>RSI (14)</span><strong id="rsi-val">—</strong></div>
+    <div class="metric"><span>SMA 20</span><strong id="sma20-val">—</strong></div>
+    <div class="metric"><span>SMA 50</span><strong id="sma50-val">—</strong></div>
+    <div class="metric"><span>Signal</span><strong id="signal-val">—</strong></div>
+  </div>
+  <div class="hint">Les indicateurs se chargent avec les chandeliers OHLC (CoinGecko / Yahoo). RSI &lt; 30 = survente, &gt; 70 = surachat.</div>
+</div>
+
+<div class="box">
+  <h2>🎯 Calculateur d'Espérance</h2>
+  <div class="grid2">
+    <div>
+      <label>Taux de réussite (%)</label>
+      <input type="number" id="inp-winrate" value="40" min="0" max="100" step="1">
+    </div>
+    <div>
+      <label>Ratio Gain/Risque (R:R)</label>
+      <input type="number" id="inp-rr" value="2.5" min="0.1" step="0.1">
+    </div>
+  </div>
+  <div class="hint">R:R = combien tu gagnes quand tu as raison, divisé par ce que tu perds quand tu as tort. Ex: R:R 2.5 = tu gagnes 2,5€ pour 1€ risqué.</div>
+  <button class="btn-green" onclick="calcExpectancy()">Calculer l'espérance</button>
+  <div style="margin-top:12px;">
+    <div class="metric"><span>Espérance par trade</span><strong id="exp-result">—</strong></div>
+    <div class="metric"><span>Verdict</span><strong id="exp-verdict">—</strong></div>
+  </div>
+</div>
+
+<div class="box">
+  <h2>💰 Taille de Position</h2>
+  <div class="grid2">
+    <div>
+      <label>Capital (€)</label>
+      <input type="number" id="inp-capital" value="1000" min="0" step="1">
+    </div>
+    <div>
+      <label>Risque par trade (%)</label>
+      <input type="number" id="inp-risk" value="1" min="0.1" max="100" step="0.1">
+    </div>
+  </div>
+  <label>Prix d'entrée</label>
+  <input type="number" id="inp-entry" value="0" step="0.01">
+  <label>Stop-loss</label>
+  <input type="number" id="inp-stop" value="0" step="0.01">
+  <button class="btn-blue" onclick="calcPosition()">Calculer la taille</button>
+  <div style="margin-top:12px;">
+    <div class="metric"><span>Montant risqué</span><strong id="pos-risk">—</strong></div>
+    <div class="metric"><span>Quantité à acheter</span><strong id="pos-qty">—</strong></div>
+  </div>
+</div>
+
+<script>
+let market = 'crypto';
+let currentPrice = 0;
+
+function setMarket(m) {
+  market = m;
+  document.getElementById('tab-crypto').className = m==='crypto' ? 'tab active' : 'tab';
+  document.getElementById('tab-stock').className = m==='stock' ? 'tab active' : 'tab';
+  const sel = document.getElementById('sel-asset');
+  if (m === 'crypto') {
+    sel.innerHTML = '<option value="bitcoin">BTC / USD</option><option value="ethereum">ETH / USD</option><option value="solana">SOL / USD</option>';
+  } else {
+    sel.innerHTML = '<option value="AAPL">Apple (AAPL)</option><option value="TSLA">Tesla (TSLA)</option><option value="MSFT">Microsoft (MSFT)</option>';
+  }
+  fetchPrice();
+}
+
+async function fetchPrice() {
+  const asset = document.getElementById('sel-asset').value;
+  document.getElementById('price-display').textContent = '⏳ chargement...';
+  try {
+    if (market === 'crypto') {
+      const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${asset}&vs_currencies=usd&include_24hr_change=true`);
+      const d = await r.json();
+      const p = d[asset].usd;
+      const ch = d[asset].usd_24h_change || 0;
+      currentPrice = p;
+      document.getElementById('price-display').textContent = '$' + p.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
+      const cEl = document.getElementById('change-display');
+      cEl.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '% (24h)';
+      cEl.className = ch >= 0 ? 'pos' : 'neg';
+      document.getElementById('change-display').style.textAlign = 'center';
+      await fetchCandles(asset);
+    } else {
+      // Yahoo Finance via proxy public (fallback)
+      const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${asset}?range=1d&interval=1d`);
+      const d = await r.json();
+      const p = d.chart.result[0].meta.regularMarketPrice;
+      currentPrice = p;
+      document.getElementById('price-display').textContent = '$' + p.toFixed(2);
+      document.getElementById('change-display').textContent = 'Action — données 1 jour';
+      document.getElementById('change-display').className = '';
+      document.getElementById('change-display').style.textAlign = 'center';
+    }
+  } catch(e) {
+    document.getElementById('price-display').textContent = '❌ Erreur réseau';
+    console.warn(e);
+  }
+}
+
+async function fetchCandles(coinId) {
+  try {
+    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=30`);
+    const candles = await r.json();
+    if (!Array.isArray(candles) || candles.length < 50) return;
+    const closes = candles.map(c => c[4]);
+    // RSI(14) simplifié
+    let gains = 0, losses = 0;
+    for (let i = closes.length-14; i < closes.length; i++) {
+      const diff = closes[i] - closes[i-1];
+      if (diff >= 0) gains += diff; else losses -= diff;
+    }
+    const avgGain = gains/14, avgLoss = losses/14;
+    const rsi = avgLoss === 0 ? 100 : 100 - (100/(1 + avgGain/avgLoss));
+    // SMA
+    const sma = (arr, n) => arr.slice(-n).reduce((a,b)=>a+b,0)/n;
+    const sma20 = sma(closes, 20);
+    const sma50 = closes.length >= 50 ? sma(closes, 50) : null;
+    document.getElementById('rsi-val').textContent = rsi.toFixed(1);
+    document.getElementById('sma20-val').textContent = '$' + sma20.toFixed(2);
+    document.getElementById('sma50-val').textContent = sma50 ? '$' + sma50.toFixed(2) : 'N/A';
+    const last = closes[closes.length-1];
+    let sig = 'Neutre';
+    if (rsi < 30) sig = '🟢 Survente (achat potentiel)';
+    else if (rsi > 70) sig = '🔴 Surachat (vente potentielle)';
+    else if (sma50 && last > sma20 && sma20 > sma50) sig = '🟢 Tendance haussière';
+    else if (sma50 && last < sma20 && sma20 < sma50) sig = '🔴 Tendance baissière';
+    document.getElementById('signal-val').textContent = sig;
+  } catch(e) { console.warn('candles', e); }
+}
+
+function calcExpectancy() {
+  const wr = parseFloat(document.getElementById('inp-winrate').value) / 100;
+  const rr = parseFloat(document.getElementById('inp-rr').value);
+  if (isNaN(wr) || isNaN(rr) || wr < 0 || wr > 1 || rr <= 0) {
+    alert('Valeurs invalides'); return;
+  }
+  const lr = 1 - wr;
+  const exp = (wr * rr) - (lr * 1); // en R
+  const el = document.getElementById('exp-result');
+  el.textContent = (exp >= 0 ? '+' : '') + exp.toFixed(3) + ' R par trade';
+  el.className = exp >= 0 ? 'pos' : 'neg';
+  const v = document.getElementById('exp-verdict');
+  if (exp > 0.2) { v.textContent = '✅ Système rentable'; v.className = 'pos'; }
+  else if (exp > 0) { v.textContent = '⚠️ Rentable mais faible'; v.className = 'pos'; }
+  else { v.textContent = '❌ Système perdant à long terme'; v.className = 'neg'; }
+}
+
+function calcPosition() {
+  const cap = parseFloat(document.getElementById('inp-capital').value);
+  const riskPct = parseFloat(document.getElementById('inp-risk').value) / 100;
+  const entry = parseFloat(document.getElementById('inp-entry').value);
+  const stop = parseFloat(document.getElementById('inp-stop').value);
+  if (isNaN(cap)||isNaN(riskPct)||isNaN(entry)||isNaN(stop)||entry<=0||stop<=0) {
+    alert('Remplis tous les champs (entrée et stop > 0)'); return;
+  }
+  if (entry === stop) { alert('Entrée et stop identiques'); return; }
+  const riskAmount = cap * riskPct;
+  const riskPerUnit = Math.abs(entry - stop);
+  const qty = riskAmount / riskPerUnit;
+  document.getElementById('pos-risk').textContent = riskAmount.toFixed(2) + ' €';
+  document.getElementById('pos-qty').textContent = qty.toFixed(6);
+}
+
+// Init
+fetchPrice();
+</script>
+</body>
+</html>
