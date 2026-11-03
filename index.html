@@ -37,7 +37,15 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #475569;border-ra
 #prix{font-size:28px;font-weight:bold;color:var(--acc);text-align:center}
 #var{text-align:center;font-size:13px;margin-top:2px}#hl{text-align:center;font-size:11px;color:var(--mut);margin-top:3px}
 canvas{width:100%;height:250px;display:block;touch-action:none}
-#e-graph,#j-graph{height:170px}
+#e-graph,#j-graph,#s-graph{height:170px}
+nav button{font-size:10px}
+details.carte>summary{cursor:pointer;font-size:13px;font-weight:bold;color:var(--acc);list-style:none}
+details.carte[open]>summary{margin-bottom:8px}
+.apl{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+.apl:last-child{border-bottom:0}.apl small{display:block;color:var(--mut);font-size:11px}.apl>div:last-child{text-align:right}
+.ch{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;margin:0;font-weight:normal;color:var(--txt)}
+.ch input{width:auto}.ch small{color:var(--mut);margin-left:auto}
+a.lien{color:var(--acc);text-decoration:none}
 .note{font-size:11px;color:#64748b;line-height:1.4;margin-top:4px}
 .m{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
 .m:last-child{border-bottom:0}.m span:first-child{color:var(--mut)}
@@ -65,7 +73,11 @@ canvas{width:100%;height:250px;display:block;touch-action:none}
     <section id="v-marche" class="vue actif">
       <div class="seg"><button id="m-crypto" class="actif" onclick="choisirMarche('crypto')">₿ Crypto</button><button id="m-actions" onclick="choisirMarche('actions')">📈 Actions</button></div>
       <div class="ligne"><input id="sym" type="text" autocapitalize="characters" autocomplete="off" placeholder="BTCUSDT, ETHUSDT…" onkeydown="if(event.key==='Enter')chargerSaisie()"><button class="b petit" style="width:auto;margin:0;padding:10px 16px" onclick="chargerSaisie()">OK</button></div>
-      <div id="chips" class="chips"></div>
+      <details class="carte" id="apercu-box" ontoggle="if(this.open)chargerApercu()">
+        <summary>📋 Mes actifs <span id="ap-n" class="note"></span></summary>
+        <div class="ligne"><button class="b sec" onclick="chargerApercu(true)">🔄 Actualiser</button><button class="b" onclick="ouvrirChoix()">✏️ Choisir mes actifs</button></div>
+        <div id="ap-etat" class="note"></div><div id="apercu"></div>
+      </details>
       <div class="ligne"><select id="tf" onchange="changerTf()"></select><button id="btn-fav" class="b sec petit" style="width:auto;margin:0" onclick="basculerFavori()">☆</button><label class="auto petit"><input type="checkbox" id="auto" onchange="basculerAuto()"> Auto 30 s</label></div>
       <div class="carte"><div id="prix">—</div><div id="var"></div><div id="hl"></div></div>
       <div class="carte">
@@ -77,6 +89,7 @@ canvas{width:100%;height:250px;display:block;touch-action:none}
       <div class="carte"><h2>Lecture des signaux</h2><div id="signaux"></div><div id="verdict" class="verdict">—</div>
         <div class="note">Les indicateurs résument le passé : ils ne prédisent rien et ne constituent pas un conseil en investissement.</div></div>
       <button class="b vert" onclick="versCalculateur()">🧮 Calculer ma position sur cet actif</button>
+      <button class="b" onclick="vue('sim');formOrdre()">🎮 Passer un ordre simulé sur cet actif</button>
       <p class="note" id="source" style="margin-top:10px"></p>
     </section>
 
@@ -90,7 +103,7 @@ canvas{width:100%;height:250px;display:block;touch-action:none}
           <div class="g3"><div><label>Risque / trade (%)</label><input type="number" id="p-risk" value="1" min="0.01" max="100" step="any" inputmode="decimal"></div>
           <div><label>Frais (% / ordre)</label><input type="number" id="p-fee" value="0.1" min="0" step="any" inputmode="decimal"></div>
           <div><label>Levier (x)</label><input type="number" id="p-lev" value="1" min="1" step="any" inputmode="decimal"></div></div>
-          <div class="g2"><div><label>Devise de l'actif</label><select id="p-assetccy"><option>USD</option><option>EUR</option></select></div>
+          <div class="g2"><div><label>Devise de l'actif</label><select id="p-assetccy"><option>USD</option><option>EUR</option><option value="MEME">Même que le capital</option></select></div>
           <div><label>1 EUR = … USD</label><input type="number" id="p-taux" value="1.08" min="0" step="any" inputmode="decimal"></div></div>
           <div class="g3"><div><label>Prix d'entrée</label><input type="number" id="p-entry" step="any" inputmode="decimal"></div>
           <div><label>Stop-loss</label><input type="number" id="p-stop" step="any" inputmode="decimal"></div>
@@ -115,6 +128,25 @@ canvas{width:100%;height:250px;display:block;touch-action:none}
       </div>
     </section>
 
+    <section id="v-sim" class="vue">
+      <div class="carte">
+        <h2>🎮 Compte de simulation</h2>
+        <div id="sim-eq" style="font-size:26px;font-weight:bold;text-align:center;color:var(--acc)">—</div>
+        <div id="sim-pl" style="text-align:center;font-size:13px"></div>
+        <div class="g2" id="sim-chiffres" style="margin-top:8px"></div>
+        <div class="ligne" style="margin-top:8px"><button class="b sec" onclick="rafraichirSim()">🔄 Actualiser</button><button class="b sec" onclick="formReset()">♻️ Nouveau compte</button></div>
+        <label class="auto"><input type="checkbox" id="sim-auto" checked> Actualisation automatique (60 s)</label>
+      </div>
+      <div class="carte"><h2>Évolution de l'équité</h2><canvas id="s-graph"></canvas></div>
+      <button class="b vert" onclick="formOrdre()">➕ Nouvel ordre</button>
+      <div class="carte" style="margin-top:12px"><h2>Positions ouvertes</h2><div id="s-pos"></div></div>
+      <div class="carte"><h2>Ordres en attente</h2><div id="s-ord"></div></div>
+      <div class="carte"><h2>Résultats</h2><div id="s-stats" class="g2"></div></div>
+      <div class="carte"><h2>Historique</h2><div id="s-hist"></div></div>
+      <button class="b sec" onclick="exporterSimCSV()">📄 Exporter l'historique (CSV)</button>
+      <p class="note" style="margin-top:10px">Simulation avec cours réels et argent fictif. Les stops, objectifs, ordres limites et liquidations sont vérifiés à l'ouverture de l'application d'après l'historique des cours ; dans une même bougie, le stop est supposé touché avant l'objectif. La simulation ignore le glissement et la liquidité : en réel, les résultats seraient moins favorables.</p>
+    </section>
+
     <section id="v-journal" class="vue">
       <div class="carte"><h2>Statistiques réelles</h2><div id="j-stats" class="g2"></div></div>
       <div class="carte"><h2>Courbe de résultat cumulé</h2><canvas id="j-graph"></canvas></div>
@@ -129,7 +161,7 @@ canvas{width:100%;height:250px;display:block;touch-action:none}
         <div id="bak-info" class="info"></div>
         <div class="g2"><button class="b vert" onclick="sauvegarder()">💾 Sauvegarder</button><button class="b sec" onclick="restaurer()">📥 Restaurer</button></div>
         <div class="note">Le journal est stocké uniquement sur ce téléphone. Désinstaller l'application ou effacer ses données le supprime : sauvegardez régulièrement et conservez le fichier ailleurs.</div></div>
-      <div class="carte"><h2>À propos</h2>
+      <div class="carte"><h2>À propos · Trade Tools 3.0</h2>
         <div class="note">Données de marché : Binance (crypto), Yahoo Finance puis Stooq (actions), parfois différées. Outil d'aide à la décision : aucun conseil en investissement. Le trading comporte un risque de perte en capital.</div>
         <div class="note">Si l'application se ferme au démarrage, l'erreur exacte s'affiche au lancement suivant : copiez-la pour la transmettre.</div></div>
     </section>
@@ -137,6 +169,7 @@ canvas{width:100%;height:250px;display:block;touch-action:none}
   <nav>
     <button id="n-marche" class="actif" onclick="vue('marche')"><b>📊</b>Marché</button>
     <button id="n-calc" onclick="vue('calc')"><b>🧮</b>Calculs</button>
+    <button id="n-sim" onclick="vue('sim')"><b>🎮</b>Simulation</button>
     <button id="n-journal" onclick="vue('journal')"><b>📓</b>Journal</button>
     <button id="n-plus" onclick="vue('plus')"><b>⚙️</b>Plus</button>
   </nav>
@@ -199,7 +232,13 @@ const BIN = 'https://data-api.binance.vision/api/v3';
 function deviseCrypto(sym) { const m = sym.match(/(USDT|USDC|FDUSD|BUSD|EUR|BTC|ETH|BNB)$/); const q = m ? m[1] : 'USD'; return /USD/.test(q) ? 'USD' : q; }
 function normaliser(marche, s) {
   s = String(s || '').trim().toUpperCase();
-  if (marche === 'crypto') { s = s.replace(/[^A-Z0-9]/g, ''); if (s && !/(USDT|USDC|FDUSD|BUSD|EUR|BTC|ETH|BNB)$/.test(s)) s += 'USDT'; return s; }
+  if (marche === 'crypto') {
+    s = s.replace(/[^A-Z0-9]/g, ''); if (!s) return s;
+    const m = s.match(/(USDT|USDC|FDUSD|BUSD|EUR|BTC|ETH|BNB)$/);
+    // « BTC », « ETH », « WBTC » sont des actifs, pas des paires : on ajoute USDT. « ETHBTC », « BTCEUR » sont déjà des paires.
+    if (!m || s.length - m[1].length < (/^(BTC|ETH|BNB)$/.test(m[1]) ? 2 : 1)) s += 'USDT';
+    return s;
+  }
   return s.replace(/[^A-Z0-9.\-=^]/g, '');
 }
 function parseKlines(arr) { return arr.map(r => ({ t: r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] })); }
@@ -243,11 +282,11 @@ async function donneesStooq(sym) {
   const s = (sym.indexOf('.') >= 0 ? sym : sym + '.US').toLowerCase();
   return parseStooq(await http('https://stooq.com/q/d/l/?s=' + encodeURIComponent(s) + '&i=d'));
 }
-async function donneesAction(sym, tf) {
-  const p = YF[tf] || YF['1d'];
+async function donneesAction(sym, tf, leger) {
+  const p = leger ? ['1d', '5d'] : (YF[tf] || YF['1d']);      // « leger » : 5 jours suffisent pour un cours et sa variation
   try { return parseYahoo(JSON.parse(await http('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=' + p[1] + '&interval=' + p[0])), tf); }
   catch (e) {
-    if (tf !== '1h') { try { return await donneesStooq(sym); } catch (e2) { /* on garde l'erreur d'origine */ } }
+    if (tf !== '1h' && sym.indexOf('.') < 0) { try { return await donneesStooq(sym); } catch (e2) { /* on garde l'erreur d'origine */ } }
     if (e.status === 404) throw new Error('Symbole inconnu : ' + sym);
     throw e;
   }
@@ -310,7 +349,27 @@ function signaux(I) {
 //  Marché : état, chargement, affichage
 // =====================================================================
 const S = { marche: 'crypto', sym: { crypto: 'BTCUSDT', actions: 'AAPL' }, tf: { crypto: '1d', actions: '1d' }, candles: [], info: null, ind: null, n: 80, sel: null, req: 0, auto: false, vue: 'marche', series: {} };
-let watch = lire('tt_watch', { crypto: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'], actions: ['AAPL', 'TSLA', 'MSFT'] });
+const CAT = {
+  crypto: [['BTCUSDT', 'Bitcoin'], ['ETHUSDT', 'Ethereum'], ['BNBUSDT', 'BNB'], ['SOLUSDT', 'Solana'], ['XRPUSDT', 'XRP'], ['ADAUSDT', 'Cardano'], ['DOGEUSDT', 'Dogecoin'], ['AVAXUSDT', 'Avalanche'], ['LINKUSDT', 'Chainlink'], ['DOTUSDT', 'Polkadot'],
+    ['TRXUSDT', 'TRON'], ['LTCUSDT', 'Litecoin'], ['BCHUSDT', 'Bitcoin Cash'], ['ATOMUSDT', 'Cosmos'], ['UNIUSDT', 'Uniswap'], ['XLMUSDT', 'Stellar'], ['NEARUSDT', 'NEAR'], ['APTUSDT', 'Aptos'], ['ARBUSDT', 'Arbitrum'], ['OPUSDT', 'Optimism'],
+    ['FILUSDT', 'Filecoin'], ['ETCUSDT', 'Ethereum Classic'], ['AAVEUSDT', 'Aave'], ['ALGOUSDT', 'Algorand'], ['INJUSDT', 'Injective'], ['SUIUSDT', 'Sui'], ['SHIBUSDT', 'Shiba Inu'], ['PEPEUSDT', 'Pepe'], ['HBARUSDT', 'Hedera'], ['POLUSDT', 'Polygon']],
+  actions: [['AAPL', 'Apple'], ['MSFT', 'Microsoft'], ['GOOGL', 'Alphabet (Google)'], ['AMZN', 'Amazon'], ['NVDA', 'Nvidia'], ['META', 'Meta'], ['TSLA', 'Tesla'], ['NFLX', 'Netflix'], ['AMD', 'AMD'], ['INTC', 'Intel'],
+    ['ORCL', 'Oracle'], ['CRM', 'Salesforce'], ['ADBE', 'Adobe'], ['PYPL', 'PayPal'], ['DIS', 'Disney'], ['KO', 'Coca-Cola'], ['PEP', 'PepsiCo'], ['MCD', "McDonald's"], ['NKE', 'Nike'], ['JPM', 'JPMorgan'],
+    ['V', 'Visa'], ['MA', 'Mastercard'], ['BAC', 'Bank of America'], ['WMT', 'Walmart'], ['XOM', 'Exxon Mobil'], ['CVX', 'Chevron'], ['PFE', 'Pfizer'], ['JNJ', 'Johnson & Johnson'], ['UNH', 'UnitedHealth'], ['BA', 'Boeing'],
+    ['COIN', 'Coinbase'], ['UBER', 'Uber'], ['PLTR', 'Palantir'], ['SPY', 'ETF S&P 500'], ['QQQ', 'ETF Nasdaq 100'],
+    ['MC.PA', 'LVMH'], ['OR.PA', "L'Oréal"], ['RMS.PA', 'Hermès'], ['AIR.PA', 'Airbus'], ['SAN.PA', 'Sanofi'], ['TTE.PA', 'TotalEnergies'], ['BNP.PA', 'BNP Paribas'], ['SU.PA', 'Schneider Electric'], ['AI.PA', 'Air Liquide'], ['SAF.PA', 'Safran'],
+    ['DG.PA', 'Vinci'], ['CS.PA', 'AXA'], ['KER.PA', 'Kering'], ['RNO.PA', 'Renault'], ['ORA.PA', 'Orange'], ['GLE.PA', 'Société Générale'], ['CAP.PA', 'Capgemini'], ['STLAP.PA', 'Stellantis'], ['BN.PA', 'Danone']]
+};
+const NOM = {}; Object.keys(CAT).forEach(m => CAT[m].forEach(a => { NOM[a[0]] = a[1]; }));
+const DEF_WATCH = {
+  crypto: ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 'AVAXUSDT', 'LINKUSDT', 'DOTUSDT'],
+  actions: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'NFLX', 'AMD', 'JPM', 'V', 'KO', 'DIS', 'MC.PA', 'OR.PA', 'AIR.PA', 'SAN.PA', 'TTE.PA', 'BNP.PA', 'RMS.PA']
+};
+let watch = (function () {   // les anciens favoris par défaut (3 + 3) sont remplacés par la nouvelle liste étendue
+  const w = lire('tt_watch', null), vieux = JSON.stringify({ crypto: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'], actions: ['AAPL', 'TSLA', 'MSFT'] });
+  if (!w || !Array.isArray(w.crypto) || !Array.isArray(w.actions) || JSON.stringify(w) === vieux) return JSON.parse(JSON.stringify(DEF_WATCH));
+  return w;
+})();
 const TFS = { crypto: [['15m', '15 min'], ['1h', '1 heure'], ['4h', '4 heures'], ['1d', '1 jour'], ['1w', '1 semaine']], actions: [['1h', '1 heure'], ['1d', '1 jour'], ['1wk', '1 semaine']] };
 
 function remplirTf() {
@@ -320,10 +379,10 @@ function remplirTf() {
 }
 function rendreChips() {
   const cur = S.sym[S.marche], l = watch[S.marche] || [];
-  $('chips').innerHTML = l.map(s => '<span class="chipw' + (s === cur ? ' sel' : '') + '" onclick="choisirSymbole(\'' + esc(s) + '\')">' + esc(s) + '</span>').join('') || '<span class="note">Aucun favori : touchez ☆</span>';
   $('btn-fav').textContent = l.indexOf(cur) >= 0 ? '⭐' : '☆';
+  rendreApercu();
 }
-function choisirMarche(m) { S.marche = m; $('m-crypto').className = m === 'crypto' ? 'actif' : ''; $('m-actions').className = m === 'actions' ? 'actif' : ''; remplirTf(); rendreChips(); chargerMarche(); }
+function choisirMarche(m) { S.marche = m; $('m-crypto').className = m === 'crypto' ? 'actif' : ''; $('m-actions').className = m === 'actions' ? 'actif' : ''; remplirTf(); rendreChips(); chargerMarche(); if ($('apercu-box').open) chargerApercu(); }
 function choisirSymbole(s) { S.sym[S.marche] = s; $('sym').value = s; rendreChips(); chargerMarche(); }
 function chargerSaisie() { const s = normaliser(S.marche, $('sym').value); if (!s) return; choisirSymbole(s); }
 function changerTf() { S.tf[S.marche] = $('tf').value; chargerMarche(); }
@@ -337,22 +396,46 @@ function basculerAuto() {
   S.auto = $('auto').checked; clearInterval(timerAuto);
   if (S.auto) timerAuto = setInterval(() => { if (S.vue === 'marche' && !document.hidden) chargerMarche(true); }, 30000);
 }
+function appliquerDonnees(d) {
+  S.candles = d.candles; S.info = d.info; S.sel = null;
+  const c = d.candles.map(k => k.c); S.series = { sma20: sma(c, 20), sma50: sma(c, 50) };
+  S.ind = indicateurs(d.candles);
+  afficherMarche();
+}
+function cleCache(m, s, tf) { return m + '|' + s + '|' + tf; }
+function sauverCache(k, d) {
+  try {
+    const c = lire('tt_cache', {}); c[k] = { t: Date.now(), c: d.candles.map(x => [x.t, x.o, x.h, x.l, x.c, x.v]), i: d.info };
+    Object.keys(c).sort((a, b) => c[b].t - c[a].t).slice(8).forEach(x => { delete c[x]; });
+    ecrire('tt_cache', c);
+  } catch (e) { /* cache facultatif */ }
+}
+function lireCache(k) {
+  const c = lire('tt_cache', {})[k];
+  return c ? { t: c.t, candles: c.c.map(a => ({ t: a[0], o: a[1], h: a[2], l: a[3], c: a[4], v: a[5] })), info: c.i } : null;
+}
 async function chargerMarche(silencieux) {
-  const id = ++S.req, sym = S.sym[S.marche], tf = S.tf[S.marche], marche = S.marche;
+  const id = ++S.req, sym = S.sym[S.marche], tf = S.tf[S.marche], marche = S.marche, k = cleCache(marche, sym, tf);
   if (!silencieux) { statut('charge'); $('prix').textContent = '⏳'; }
   try {
     const d = marche === 'crypto' ? await donneesCrypto(sym, tf) : await donneesAction(sym, tf);
     if (id !== S.req) return;           // une requête plus récente a pris le relais
-    S.candles = d.candles; S.info = d.info; S.sel = null;
-    const c = d.candles.map(k => k.c); S.series = { sma20: sma(c, 20), sma50: sma(c, 50) };
-    S.ind = indicateurs(d.candles);
-    statut('ok'); afficherMarche();
+    appliquerDonnees(d); statut('ok'); sauverCache(k, d);
   } catch (e) {
     if (id !== S.req) return;
-    statut('err'); if (!silencieux) { $('prix').textContent = '—'; $('var').textContent = ''; $('hl').textContent = ''; }
+    statut('err');
+    const hors = e.status === 0 || /Réseau|Délai/.test(e.message || ''), c = hors ? lireCache(k) : null;
+    if (c) {                            // hors ligne : on affiche les dernières données mémorisées
+      appliquerDonnees(c);
+      $('source').textContent = 'Hors ligne : dernières données du ' + new Date(c.t).toLocaleString('fr-FR') + ' · ' + c.info.source;
+      if (!silencieux) toast('Hors ligne : dernières données enregistrées');
+      return;
+    }
+    if (!silencieux) { $('prix').textContent = '—'; $('var').textContent = ''; $('hl').textContent = ''; }
     toast(e.message || 'Erreur inconnue');
   }
 }
+
 function afficherMarche() {
   const I = S.info, ind = S.ind, d = dev(I.devise);
   $('prix').textContent = d + ' ' + fmtPrix(I.prix);
@@ -459,6 +542,7 @@ function calculerPosition(o) {
 function calcPosition() {
   const o = { capital: num('p-capital'), capCcy: $('p-capccy').value, riskPct: num('p-risk'), fee: num('p-fee'), lev: num('p-lev'), assetCcy: $('p-assetccy').value, taux: num('p-taux'),
     entry: num('p-entry'), stop: num('p-stop'), target: num('p-target'), entier: $('p-entier').checked };
+  if (o.assetCcy === 'MEME') o.assetCcy = o.capCcy;   // aucune conversion de devise
   const r = calculerPosition(o), R = $('p-res');
   if (!r.ok) { R.innerHTML = '<div class="alerte">' + esc(r.erreur) + '</div>'; return; }
   const m = (a, b, c) => '<div class="m"><span>' + a + '</span><span class="' + (c || '') + '">' + b + '</span></div>', cc = dev(o.capCcy), ac = dev(o.assetCcy);
@@ -475,13 +559,13 @@ async function tauxEURUSD() {
 function versCalculateur() {
   if (!S.info) { toast('Chargez d\'abord un actif'); return; }
   const I = S.info, ind = S.ind;
-  $('p-entry').value = I.prix; $('p-assetccy').value = I.devise === 'EUR' ? 'EUR' : 'USD'; $('p-entier').checked = S.marche === 'actions';
+  $('p-entry').value = I.prix; $('p-assetccy').value = I.devise === 'EUR' ? 'EUR' : (I.devise === 'USD' ? 'USD' : 'MEME'); $('p-entier').checked = S.marche === 'actions';
   $('p-fee').value = S.marche === 'crypto' ? '0.1' : '0';
   if (ind && ind.atr) $('p-stop').value = +(I.prix - 1.5 * ind.atr).toPrecision(6);
   $('p-target').value = '';
   vue('calc'); choisirCalc('pos'); persister();
   if ($('p-capccy').value !== $('p-assetccy').value) tauxEURUSD();
-  toast('Stop pré-rempli à 1,5 × ATR : ajustez-le à votre analyse');
+  toast(['EUR', 'USD'].indexOf(I.devise) < 0 ? 'Actif coté en ' + I.devise + ' : aucune conversion appliquée, vérifiez vos montants' : 'Stop pré-rempli à 1,5 × ATR : ajustez-le à votre analyse');
 }
 
 // =====================================================================
@@ -533,8 +617,8 @@ function choisirCalc(c) {
 //  Journal de trades
 // =====================================================================
 let journal = lire('tt_journal', []);
-function pnlTrade(t) { return (t.exit - t.entry) * t.qty * (t.side === 'long' ? 1 : -1) - (t.fees || 0); }
-function rTrade(t) { if (!(t.stop > 0)) return null; const r = Math.abs(t.entry - t.stop) * t.qty; return r > 0 ? pnlTrade(t) / r : null; }
+function pnlTrade(t) { if (t.pnl != null) return t.pnl; return (t.exit - t.entry) * t.qty * (t.side === 'long' ? 1 : -1) - (t.fees || 0); }
+function rTrade(t) { if (t.pnl != null || !(t.stop > 0)) return null; const r = Math.abs(t.entry - t.stop) * t.qty; return r > 0 ? pnlTrade(t) / r : null; }
 function statsJournal(tr) {
   const L = tr.slice().sort((a, b) => a.ts - b.ts), p = L.map(pnlTrade), n = L.length;
   const gains = p.filter(x => x > 0), pertes = p.filter(x => x <= 0), sG = gains.reduce((a, b) => a + b, 0), sP = -pertes.reduce((a, b) => a + b, 0);
@@ -579,7 +663,7 @@ function supprimerTrade(id) {
 //  Sauvegarde, restauration, export CSV
 // =====================================================================
 function lireEntrees() { const o = {}; PERSIST.forEach(id => { const e = $(id); if (e) o[id] = e.type === 'checkbox' ? e.checked : e.value; }); return o; }
-function construireSauvegarde() { return JSON.stringify({ app: 'TradeTools', version: 1, date: new Date().toISOString(), journal: journal, watch: watch, entrees: lireEntrees() }, null, 1); }
+function construireSauvegarde() { return JSON.stringify({ app: 'TradeTools', version: 2, date: new Date().toISOString(), journal: journal, watch: watch, sim: sim, entrees: lireEntrees() }, null, 1); }
 function sauverFichier(nom, mime, contenu) {
   if (window.AndroidBridge && AndroidBridge.saveFile) { AndroidBridge.saveFile(nom, mime, contenu); return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([contenu], { type: mime })); a.download = nom; a.click(); window.__onSaved(true);
@@ -598,10 +682,15 @@ window.__onPicked = function (txt) {
   let d = null; try { d = txt ? JSON.parse(txt) : null; } catch (e) { d = null; }
   if (!d || d.app !== 'TradeTools' || !Array.isArray(d.journal)) { alert('Fichier invalide : ce n\'est pas une sauvegarde Trade Tools.'); return; }
   if (!confirm('Restaurer cette sauvegarde (' + d.journal.length + ' trade(s)) ?\nLes données actuelles seront REMPLACÉES.')) return;
-  journal = d.journal.filter(t => t && t.symbol && t.entry > 0 && t.exit > 0 && t.qty > 0);
-  if (d.watch && d.watch.crypto && d.watch.actions) watch = d.watch;
+  journal = d.journal.filter(t => t && t.symbol && +t.entry > 0 && +t.exit > 0 && +t.qty > 0).map((t, i) => ({ id: +t.id || (Date.now() + i), symbol: String(t.symbol).slice(0, 20).toUpperCase(), side: t.side === 'short' ? 'short' : 'long',
+    entry: +t.entry, exit: +t.exit, qty: +t.qty, fees: +t.fees || 0, stop: +t.stop > 0 ? +t.stop : null, notes: String(t.notes || '').slice(0, 300), ts: +t.ts || Date.now() }));
+  if (d.watch && Array.isArray(d.watch.crypto) && Array.isArray(d.watch.actions)) {
+    const sain = a => a.map(String).filter(x => /^[A-Z0-9.\-=^]{1,20}$/.test(x));
+    watch = { crypto: sain(d.watch.crypto), actions: sain(d.watch.actions) };
+  }
   if (d.entrees) PERSIST.forEach(id => { const e = $(id); if (e && d.entrees[id] != null) { if (e.type === 'checkbox') e.checked = !!d.entrees[id]; else e.value = d.entrees[id]; } });
-  ecrire('tt_journal', journal); ecrire('tt_watch', watch); persister(); majJournal(); rendreChips(); window.__onSaved(true); toast('Sauvegarde restaurée');
+  if (d.sim) { const s2 = assainirSim(d.sim); if (s2) { sim = s2; simPrix = {}; ecrire('tt_sim', sim); } }
+  ecrire('tt_journal', journal); ecrire('tt_watch', watch); persister(); majJournal(); rendreChips(); majSimUI(); window.__onSaved(true); toast('Sauvegarde restaurée');
 };
 function majBackupInfo() {
   const depuis = journal.filter(t => t.id > derniereSauve).length, e = $('bak-info');
@@ -616,20 +705,417 @@ function exporterCSV() {
 }
 
 // =====================================================================
+//  Choix des favoris et vue d'ensemble de « Mes actifs »
+// =====================================================================
+async function pool(items, n, fn) {
+  let i = 0; const w = async () => { while (i < items.length) { const k = i++; await fn(items[k], k); } };
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, w));
+}
+const cachePrix = {};
+let symCrypto = null;      // paires disponibles sur Binance (sert à masquer les symboles retirés)
+async function chargerSymbolesCrypto() {
+  if (symCrypto) return symCrypto;
+  try {
+    const arr = JSON.parse(await http(BIN + '/ticker/price'));
+    symCrypto = new Set(arr.map(t => t.symbol));
+    arr.forEach(t => { cachePrix['crypto|' + t.symbol] = { prix: +t.price, devise: deviseCrypto(t.symbol), t: Date.now() }; });
+  } catch (e) { symCrypto = null; }
+  return symCrypto;
+}
+let choixTmp = null;
+async function ouvrirChoix() {
+  const m = S.marche; choixTmp = new Set(watch[m] || []);
+  modal('<h2>Mes actifs · ' + (m === 'crypto' ? 'crypto' : 'actions') + '</h2><input id="ch-q" type="text" placeholder="Rechercher (nom ou symbole)…" oninput="rendreChoix()" autocomplete="off">'
+    + '<div id="ch-liste" style="max-height:48vh;overflow-y:auto;margin-top:6px"></div><div id="ch-n" class="note"></div>'
+    + '<div class="g2"><button class="b sec" onclick="fermer()">Annuler</button><button class="b vert" onclick="validerChoix()">Valider</button></div>');
+  rendreChoix();
+  if (m === 'crypto') { await chargerSymbolesCrypto(); if ($('ch-liste')) rendreChoix(); }
+}
+function rendreChoix() {
+  const m = S.marche, q = ($('ch-q').value || '').trim().toUpperCase();
+  const liste = CAT[m].filter(a => !q || a[0].indexOf(q) >= 0 || a[1].toUpperCase().indexOf(q) >= 0);
+  const perso = Array.from(choixTmp).filter(s => !NOM[s]);     // symboles ajoutés à la main
+  const ligne = (s, nom, ko) => '<label class="ch"><input type="checkbox" ' + (choixTmp.has(s) ? 'checked ' : '') + (ko ? 'disabled ' : '') + 'onchange="basculerChoix(\'' + esc(s) + '\',this.checked)"><b>' + esc(s) + '</b>'
+    + (nom ? '<small>' + esc(nom) + (ko ? ' (indisponible)' : '') + '</small>' : '') + '</label>';
+  $('ch-liste').innerHTML = (liste.map(a => ligne(a[0], a[1], m === 'crypto' && symCrypto && !symCrypto.has(a[0]))).join('') + perso.map(s => ligne(s, 'ajouté à la main', false)).join('')) || '<div class="note">Aucun résultat.</div>';
+  $('ch-n').textContent = choixTmp.size + ' actif(s) sélectionné(s). Un symbole absent de la liste s\'ajoute depuis la barre de saisie avec ☆.';
+}
+function basculerChoix(s, on) { if (on) choixTmp.add(s); else choixTmp.delete(s); $('ch-n').textContent = choixTmp.size + ' actif(s) sélectionné(s).'; }
+function validerChoix() {
+  const m = S.marche, ordre = CAT[m].map(a => a[0]);
+  watch[m] = Array.from(choixTmp).sort((a, b) => { const i = ordre.indexOf(a), j = ordre.indexOf(b); return (i < 0 ? 999 : i) - (j < 0 ? 999 : j); });
+  ecrire('tt_watch', watch); fermer(); rendreChips();
+  const box = $('apercu-box'); if (box && !box.open) box.open = true; else chargerApercu(true);
+}
+const apercu = { crypto: { t: 0, rows: {}, busy: false }, actions: { t: 0, rows: {}, busy: false } };
+async function apercuCrypto(l) {
+  let arr;
+  try { arr = JSON.parse(await http(BIN + '/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(l)))); }
+  catch (e) {
+    if (e.status !== 400) throw e;      // un symbole invalide fait échouer toute la requête : on interroge un par un
+    arr = []; for (const s of l) { try { arr.push(JSON.parse(await http(BIN + '/ticker/24hr?symbol=' + s))); } catch (x) { /* symbole ignoré */ } }
+  }
+  const o = {}; arr.forEach(t => { o[t.symbol] = { prix: +t.lastPrice, var: +t.priceChangePercent, devise: deviseCrypto(t.symbol) }; }); return o;
+}
+async function chargerApercu(force) {
+  const m = S.marche, l = watch[m] || [], A = apercu[m];
+  if (!l.length) { rendreApercu(); return; }
+  if (!force && Date.now() - A.t < 300000 && l.every(s => A.rows[s])) { rendreApercu(); return; }
+  if (A.busy) return; A.busy = true; $('ap-etat').textContent = 'Chargement…';
+  try {
+    if (m === 'crypto') Object.assign(A.rows, await apercuCrypto(l));
+    else {
+      let n = 0;
+      await pool(l, 4, async s => {
+        try { const d = await donneesAction(s, '1d', true); A.rows[s] = { prix: d.info.prix, var: d.info.var, devise: d.info.devise }; } catch (e) { /* ligne laissée vide */ }
+        n++; if (S.marche === m) $('ap-etat').textContent = 'Chargement ' + n + '/' + l.length;
+      });
+    }
+    A.t = Date.now();
+  } catch (e) { toast(e.message || 'Erreur'); }
+  A.busy = false; if (S.marche === m) rendreApercu();
+}
+function rendreApercu() {
+  const m = S.marche, l = watch[m] || [], A = apercu[m], cur = S.sym[m];
+  $('ap-n').textContent = '(' + l.length + ')';
+  $('apercu').innerHTML = l.map(s => {
+    const r = A.rows[s];
+    return '<div class="apl" onclick="choisirSymbole(\'' + esc(s) + '\')"><div><b' + (s === cur ? ' style="color:var(--acc)"' : '') + '>' + esc(s) + '</b><small>' + esc(NOM[s] || '') + '</small></div><div>'
+      + (r ? dev(r.devise) + ' ' + fmtPrix(r.prix) + '<small class="' + (r.var >= 0 ? 'pos' : 'neg') + '">' + signe(r.var, 2) + ' %</small>' : '<small>—</small>') + '</div></div>';
+  }).join('') || '<div class="note">Aucun actif : touchez « Choisir mes actifs ».</div>';
+  if (A.t) $('ap-etat').textContent = 'Mis à jour à ' + new Date(A.t).toLocaleTimeString('fr-FR');
+}
+
+// =====================================================================
+//  Compte de simulation : argent fictif, cours réels (moteur de calcul)
+//  Modèle « marge » : chaque position bloque sa marge (valeur / levier) ;
+//  équité = disponible + Σ (marge + résultat latent).
+// =====================================================================
+function SIM_DEF(devise, capital, frais) {
+  const c = capital > 0 ? capital : 10000;
+  return { v: 1, devise: devise === 'USD' ? 'USD' : 'EUR', capitalInitial: c, cash: c, fraisPct: frais >= 0 ? frais : 0.1, fx: 1.08, positions: [], ordres: [], historique: [], courbe: [], nextId: 1, creation: Date.now() };
+}
+function assainirSim(x) {
+  if (!x || typeof x !== 'object' || !Array.isArray(x.positions) || !Array.isArray(x.historique)) return null;
+  const n = (v, d) => (isFinite(+v) && v !== null && v !== '' ? +v : d);
+  const sym = s => String(s || '').toUpperCase().replace(/[^A-Z0-9.\-=^]/g, '').slice(0, 20);
+  const mar = m => (m === 'actions' ? 'actions' : 'crypto'), ccy = c => (c === 'EUR' ? 'EUR' : 'USD'), side = s => (s === 'short' ? 'short' : 'long');
+  const niv = v => (n(v, 0) > 0 ? +v : null), lv = v => Math.min(20, Math.max(1, n(v, 1)));
+  const base = (p, i) => ({ id: n(p.id, i + 1), symbol: sym(p.symbol), marche: mar(p.marche), side: side(p.side), qty: n(p.qty, 0), ccy: ccy(p.ccy), ts: n(p.ts, Date.now()), sl: niv(p.sl), tp: niv(p.tp), lev: lv(p.lev) });
+  const s = {
+    v: 1, devise: x.devise === 'USD' ? 'USD' : 'EUR', capitalInitial: Math.max(1, n(x.capitalInitial, 10000)), cash: n(x.cash, 0), fraisPct: Math.min(5, Math.max(0, n(x.fraisPct, 0.1))), fx: n(x.fx, 0) > 0 ? +x.fx : 1.08,
+    positions: x.positions.map((p, i) => Object.assign(base(p, i), { entry: n(p.entry, 0), entryBase: n(p.entryBase, 0), margin: n(p.margin, 0), feeOpen: n(p.feeOpen, 0) })).filter(p => p.symbol && p.qty > 0 && p.entry > 0 && p.entryBase > 0 && p.margin > 0),
+    ordres: (Array.isArray(x.ordres) ? x.ordres : []).map((p, i) => Object.assign(base(p, i), { prix: n(p.prix, 0) })).filter(o => o.symbol && o.qty > 0 && o.prix > 0),
+    historique: x.historique.map((h, i) => ({ id: n(h.id, i + 1), symbol: sym(h.symbol), marche: mar(h.marche), side: side(h.side), qty: n(h.qty, 0), entry: n(h.entry, 0), exit: n(h.exit, 0), ccy: ccy(h.ccy), ts: n(h.ts, 0), tsClose: n(h.tsClose, 0),
+      lev: lv(h.lev), fees: n(h.fees, 0), pnl: n(h.pnl, 0), raison: ['manuel', 'stop', 'objectif', 'liquidation'].indexOf(h.raison) >= 0 ? h.raison : 'manuel' })).filter(h => h.symbol && h.qty > 0),
+    courbe: (Array.isArray(x.courbe) ? x.courbe : []).map(c => ({ t: n(c.t, 0), e: n(c.e, 0) })).filter(c => c.t > 0).slice(-600), nextId: 1, creation: n(x.creation, Date.now())
+  };
+  s.nextId = 1 + Math.max.apply(null, [0, n(x.nextId, 1) - 1].concat(s.positions.map(p => p.id), s.ordres.map(o => o.id), s.historique.map(h => h.id)));
+  return s;
+}
+let sim = assainirSim(lire('tt_sim', null)) || SIM_DEF('EUR', 10000, 0.1);
+let simPrix = {}, simBusy = false, fxT = 0;
+
+function enBase(m, ccy, base, fx) { if (ccy === base) return m; if (base === 'EUR' && ccy === 'USD') return m / fx; if (base === 'USD' && ccy === 'EUR') return m * fx; return null; }
+const devOK = c => c === 'USD' || c === 'EUR';
+const cleSim = p => p.marche + '|' + p.symbol;
+const dirDe = p => (p.side === 'long' ? 1 : -1);
+// Liquidation : perte de 90 % de la marge. Un achat sans levier ne se liquide pas.
+function prixLiq(p) { if (p.lev <= 1 && p.side === 'long') return null; const f = 0.9 / p.lev; return p.side === 'long' ? p.entry * (1 - f) : p.entry * (1 + f); }
+function validerNiveaux(side, prix, sl, tp) {
+  const long = side === 'long';
+  if (sl && (long ? sl >= prix : sl <= prix)) return 'Le stop-loss doit être ' + (long ? 'sous' : 'au-dessus du') + ' le prix d\'entrée.';
+  if (tp && (long ? tp <= prix : tp >= prix)) return 'L\'objectif doit être ' + (long ? 'au-dessus du' : 'sous le') + ' prix d\'entrée.';
+  return null;
+}
+function ouvrirSim(s, o, fx, ts, valider) {
+  if (!devOK(o.ccy)) return { ok: false, err: 'Devise ' + o.ccy + ' non prise en charge : seuls l\'euro et le dollar sont gérés.' };
+  if (!(o.qty > 0) || !(o.prix > 0)) return { ok: false, err: 'La quantité et le prix doivent être positifs.' };
+  if (valider !== false) { const e = validerNiveaux(o.side, o.prix, o.sl, o.tp); if (e) return { ok: false, err: e }; }
+  const lev = Math.min(20, Math.max(1, o.lev || 1));
+  const entryBase = enBase(o.qty * o.prix, o.ccy, s.devise, fx), feeOpen = entryBase * s.fraisPct / 100, margin = entryBase / lev;
+  if (s.cash < margin + feeOpen - 1e-9) return { ok: false, err: 'Fonds insuffisants : marge + frais = ' + nf(margin + feeOpen, 2) + ' ' + dev(s.devise) + ', disponible ' + nf(Math.max(0, s.cash), 2) + ' ' + dev(s.devise) + '.' };
+  s.cash -= margin + feeOpen;
+  const pos = { id: s.nextId++, symbol: o.symbol, marche: o.marche, side: o.side, qty: o.qty, entry: o.prix, ccy: o.ccy, ts: ts, sl: o.sl || null, tp: o.tp || null, lev: lev, entryBase: entryBase, margin: margin, feeOpen: feeOpen };
+  s.positions.push(pos);
+  return { ok: true, pos: pos };
+}
+function fermerSim(s, id, prix, fx, ts, raison) {
+  const i = s.positions.findIndex(p => p.id === id);
+  if (i < 0) return { ok: false, err: 'Position introuvable.' };
+  const p = s.positions[i], exitBase = enBase(p.qty * prix, p.ccy, s.devise, fx), brut = dirDe(p) * (exitBase - p.entryBase), feeClose = exitBase * s.fraisPct / 100;
+  const retour = Math.max(0, p.margin + Math.max(brut, -p.margin) - feeClose);     // on ne peut pas perdre plus que la marge
+  s.cash += retour;
+  const pnl = retour - p.margin - p.feeOpen;
+  s.historique.push({ id: p.id, symbol: p.symbol, marche: p.marche, side: p.side, qty: p.qty, entry: p.entry, exit: prix, ccy: p.ccy, ts: p.ts, tsClose: ts, lev: p.lev, fees: p.feeOpen + feeClose, pnl: pnl, raison: raison });
+  s.positions.splice(i, 1);
+  return { ok: true, pnl: pnl };
+}
+function latentSim(s, p, prix, fx) { return dirDe(p) * (enBase(p.qty * prix, p.ccy, s.devise, fx) - p.entryBase); }
+function equiteSim(s, prix, fx) {
+  let eq = s.cash, latent = 0, marge = 0;
+  s.positions.forEach(p => { const px = prix[cleSim(p)], pl = px ? latentSim(s, p, px.prix, fx) : 0; latent += pl; marge += p.margin; eq += p.margin + Math.max(pl, -p.margin); });
+  return { equity: eq, latent: latent, marge: marge, libre: s.cash };
+}
+// Niveaux défavorables (stop, liquidation) : le plus proche de l'entrée est franchi en premier
+function adverses(p) {
+  const L = []; if (p.sl) L.push({ prix: p.sl, raison: 'stop' });
+  const lq = prixLiq(p); if (lq != null) L.push({ prix: lq, raison: 'liquidation' });
+  return L.sort((a, b) => (p.side === 'long' ? b.prix - a.prix : a.prix - b.prix));
+}
+// Rejoue les bougies postérieures à l'ouverture. Dans une même bougie, on suppose le niveau défavorable touché avant l'objectif.
+function scannerPosition(p, bougies) {
+  const long = p.side === 'long', adv = adverses(p);
+  for (const k of bougies) {
+    if (k.t <= p.ts) continue;
+    for (const a of adv) if (long ? k.l <= a.prix : k.h >= a.prix) { const gap = long ? k.o <= a.prix : k.o >= a.prix; return { prix: gap ? k.o : a.prix, ts: k.t, raison: a.raison }; }
+    if (p.tp && (long ? k.h >= p.tp : k.l <= p.tp)) { const gap = long ? k.o >= p.tp : k.o <= p.tp; return { prix: gap ? k.o : p.tp, ts: k.t, raison: 'objectif' }; }
+  }
+  return null;
+}
+// Ordre limite : achat sous le marché, vente au-dessus. Exécuté au prix limite, ou à l'ouverture si elle est plus favorable.
+function scannerOrdre(o, bougies) {
+  for (const k of bougies) {
+    if (k.t <= o.ts) continue;
+    if (o.side === 'long' ? k.l <= o.prix : k.h >= o.prix) return { prix: o.side === 'long' ? Math.min(o.prix, k.o) : Math.max(o.prix, k.o), ts: k.t };
+  }
+  return null;
+}
+function evenementsSim(s, B, fx) {
+  const ev = [];
+  s.ordres.slice().forEach(o => {
+    const bk = B[cleSim(o)]; if (!bk) return;
+    const f = scannerOrdre(o, bk); if (!f) return;
+    s.ordres = s.ordres.filter(x => x.id !== o.id);
+    const r = ouvrirSim(s, { symbol: o.symbol, marche: o.marche, side: o.side, qty: o.qty, prix: f.prix, ccy: o.ccy, sl: o.sl, tp: o.tp, lev: o.lev }, fx, f.ts, false);
+    ev.push(r.ok ? { type: 'fill', symbol: o.symbol, side: o.side, prix: f.prix } : { type: 'annule', symbol: o.symbol, raison: r.err });
+  });
+  s.positions.slice().forEach(p => {
+    const bk = B[cleSim(p)]; if (!bk) return;
+    const x = scannerPosition(p, bk); if (!x) return;
+    const r = fermerSim(s, p.id, x.prix, fx, x.ts, x.raison);
+    if (r.ok) ev.push({ type: 'close', symbol: p.symbol, raison: x.raison, prix: x.prix, pnl: r.pnl });
+  });
+  return ev;
+}
+// Contrôle avec le cours actuel (entre deux bougies) : clôture au niveau, ou au cours si celui-ci l'a dépassé (cas défavorable)
+function verifierPrixSim(s, prix, fx, ts) {
+  const ev = [];
+  s.positions.slice().forEach(p => {
+    const px = prix[cleSim(p)]; if (!px) return;
+    const c = px.prix, long = p.side === 'long'; let sortie = null;
+    for (const a of adverses(p)) if (long ? c <= a.prix : c >= a.prix) { sortie = { prix: long ? Math.min(a.prix, c) : Math.max(a.prix, c), raison: a.raison }; break; }
+    if (!sortie && p.tp && (long ? c >= p.tp : c <= p.tp)) sortie = { prix: p.tp, raison: 'objectif' };
+    if (sortie) { const r = fermerSim(s, p.id, sortie.prix, fx, ts, sortie.raison); if (r.ok) ev.push({ type: 'close', symbol: p.symbol, raison: sortie.raison, prix: sortie.prix, pnl: r.pnl }); }
+  });
+  return ev;
+}
+function snapshotSim(s, equity, ts) {
+  const L = s.courbe, last = L[L.length - 1];
+  if (last && ts - last.t < 60000) { last.t = ts; last.e = equity; return; }
+  L.push({ t: ts, e: equity });
+  if (L.length > 600) s.courbe = L.filter((_, i) => i % 2 === 0 || i > L.length - 100);
+}
+
+// =====================================================================
+//  Simulation : cours, change, actualisation et interface
+// =====================================================================
+async function chargerPrix(list) {
+  const out = {}, cr = list.filter(x => x.marche === 'crypto').map(x => x.symbol), ac = list.filter(x => x.marche === 'actions');
+  if (cr.length) {
+    try { JSON.parse(await http(BIN + '/ticker/price?symbols=' + encodeURIComponent(JSON.stringify(cr)))).forEach(t => { out['crypto|' + t.symbol] = { prix: +t.price, devise: deviseCrypto(t.symbol) }; }); }
+    catch (e) { for (const s of cr) { try { const t = JSON.parse(await http(BIN + '/ticker/price?symbol=' + s)); out['crypto|' + s] = { prix: +t.price, devise: deviseCrypto(s) }; } catch (x) { /* cours manquant */ } } }
+  }
+  await pool(ac, 4, async a => { try { const d = await donneesAction(a.symbol, '1d', true); out['actions|' + a.symbol] = { prix: d.info.prix, devise: d.info.devise }; } catch (e) { /* cours manquant */ } });
+  Object.keys(out).forEach(k => { cachePrix[k] = Object.assign({ t: Date.now() }, out[k]); });
+  return out;
+}
+async function prixActuel(marche, symbol) {
+  const r = (await chargerPrix([{ marche: marche, symbol: symbol }]))[marche + '|' + symbol];
+  if (!r) throw new Error('Cours indisponible pour ' + symbol + ' (symbole inconnu ou réseau coupé).');
+  return r;
+}
+async function fxActuel() {
+  if (Date.now() - fxT < 300000) return sim.fx;
+  try { const v = +JSON.parse(await http(BIN + '/ticker/price?symbol=EURUSDT')).price; if (v > 0) { sim.fx = v; fxT = Date.now(); } } catch (e) { /* dernier taux connu */ }
+  return sim.fx;
+}
+function intervalleCrypto(ageMs) { const j = ageMs / 86400000; return j <= 3 ? '5m' : (j <= 10 ? '15m' : (j <= 40 ? '1h' : (j <= 160 ? '4h' : '1d'))); }
+async function bougiesDepuis(marche, symbol, since) {
+  const age = Date.now() - since;
+  if (marche === 'crypto') return parseKlines(JSON.parse(await http(BIN + '/klines?symbol=' + symbol + '&interval=' + intervalleCrypto(age) + '&startTime=' + Math.floor(since) + '&limit=1000')));
+  const j = age / 86400000, p = j <= 25 ? ['60m', '1mo'] : (j <= 330 ? ['1d', '1y'] : ['1wk', '5y']);
+  return parseYahoo(JSON.parse(await http('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?range=' + p[1] + '&interval=' + p[0])), '1d').candles;
+}
+const RAISON = { manuel: 'clôture manuelle', stop: 'stop touché', objectif: 'objectif atteint', liquidation: 'liquidation' };
+function annoncerSim(ev) {
+  const m = ev.map(e => e.type === 'fill' ? '✅ Ordre limite exécuté : ' + e.symbol + ' à ' + fmtPrix(e.prix)
+    : (e.type === 'annule' ? '⚠️ Ordre ' + e.symbol + ' annulé : ' + e.raison : (e.raison === 'objectif' ? '🎯 ' : '🛑 ') + e.symbol + ' : ' + RAISON[e.raison] + ' (' + signe(e.pnl, 2) + ' ' + dev(sim.devise) + ')'));
+  if (m.length) toast(m.slice(0, 3).join(' · '));
+}
+async function rafraichirSim(silencieux) {
+  if (simBusy) return; simBusy = true;
+  try {
+    const cibles = {};
+    sim.positions.concat(sim.ordres).forEach(x => { const k = cleSim(x); cibles[k] = { marche: x.marche, symbol: x.symbol, since: Math.min(cibles[k] ? cibles[k].since : Infinity, x.ts) }; });
+    const fx = await fxActuel(), B = {};
+    // 1) historique des cours depuis l'ouverture : stops, objectifs, liquidations et ordres limites
+    await pool(Object.keys(cibles), 3, async k => {
+      const c = cibles[k];
+      const besoin = sim.ordres.some(o => cleSim(o) === k) || sim.positions.some(p => cleSim(p) === k && (p.sl || p.tp || prixLiq(p) != null));
+      if (!besoin) return;
+      try { B[k] = await bougiesDepuis(c.marche, c.symbol, c.since); } catch (e) { if (!silencieux) toast('Historique indisponible pour ' + c.symbol); }
+    });
+    let ev = evenementsSim(sim, B, fx);
+    // 2) cours actuels, puis valorisation
+    const cibles2 = {}; sim.positions.concat(sim.ordres).forEach(x => { cibles2[cleSim(x)] = { marche: x.marche, symbol: x.symbol }; });
+    simPrix = Object.assign(simPrix, await chargerPrix(Object.keys(cibles2).map(k => cibles2[k])));
+    ev = ev.concat(verifierPrixSim(sim, simPrix, fx, Date.now()));
+    snapshotSim(sim, equiteSim(sim, simPrix, fx).equity, Date.now());
+    ecrire('tt_sim', sim);
+    annoncerSim(ev);
+  } catch (e) { if (!silencieux) toast(e.message || 'Erreur'); }
+  simBusy = false; majSimUI();
+}
+function htmlPositions() {
+  const d = dev(sim.devise);
+  return sim.positions.map(p => {
+    const px = simPrix[cleSim(p)], c = dev(p.ccy), pl = px ? latentSim(sim, p, px.prix, sim.fx) : null, lq = prixLiq(p);
+    return '<div class="trade"><div><b>' + esc(p.symbol) + '</b> ' + (p.side === 'long' ? '🟢 achat' : '🔴 vente') + ' × ' + fmtQty(p.qty) + (p.lev > 1 ? ' · ' + p.lev + 'x' : '')
+      + '<small>Entrée ' + c + fmtPrix(p.entry) + (px ? ' → ' + c + fmtPrix(px.prix) : '') + '<br>' + (p.sl ? 'Stop ' + fmtPrix(p.sl) : 'Sans stop') + (p.tp ? ' · Objectif ' + fmtPrix(p.tp) : '') + (lq != null ? '<br>Liquidation ≈ ' + fmtPrix(lq) : '') + '</small></div>'
+      + '<div style="text-align:right"><span class="' + (pl == null ? '' : (pl >= 0 ? 'pos' : 'neg')) + '">' + (pl == null ? '—' : signe(pl, 2) + ' ' + d) + '</span><small>marge ' + nf(p.margin, 2) + ' ' + d + '</small>'
+      + '<small style="margin-top:4px"><a class="lien" href="#" onclick="cloturerPos(' + p.id + ');return false">clôturer</a> · <a class="lien" href="#" onclick="formNiveaux(' + p.id + ');return false">stop / objectif</a></small></div></div>';
+  }).join('') || '<div class="note">Aucune position ouverte.</div>';
+}
+function majSimUI() {
+  const s = sim, d = dev(s.devise), E = equiteSim(s, simPrix, s.fx), g = E.equity - s.capitalInitial;
+  $('sim-eq').textContent = d + ' ' + nf(E.equity, 2);
+  $('sim-pl').innerHTML = '<span class="' + (g >= 0 ? 'pos' : 'neg') + '">' + signe(g, 2) + ' ' + d + ' (' + signe(g / s.capitalInitial * 100, 2) + ' %)</span> <span class="note">depuis ' + nf(s.capitalInitial, 0) + ' ' + d + '</span>';
+  const st = (a, b, c) => '<div class="stat"><small>' + a + '</small><b class="' + (c || '') + '">' + b + '</b></div>';
+  $('sim-chiffres').innerHTML = st('Disponible', nf(E.libre, 2) + ' ' + d) + st('Marge utilisée', nf(E.marge, 2) + ' ' + d) + st('Résultat latent', signe(E.latent, 2) + ' ' + d, E.latent >= 0 ? 'pos' : 'neg') + st('Positions / ordres', s.positions.length + ' / ' + s.ordres.length);
+  tracerLignes($('s-graph'), [{ pts: [s.capitalInitial].concat(s.courbe.map(c => c.e)), c: g >= 0 ? '#22c55e' : '#ef4444', w: 2 }], { zero: s.capitalInitial, fmt: v => nf(v, 0) });
+  $('s-pos').innerHTML = htmlPositions();
+  $('s-ord').innerHTML = s.ordres.map(o => '<div class="trade"><div><b>' + esc(o.symbol) + '</b> ' + (o.side === 'long' ? '🟢 achat limite' : '🔴 vente limite') + ' × ' + fmtQty(o.qty)
+    + '<small>Prix limite ' + dev(o.ccy) + fmtPrix(o.prix) + (o.lev > 1 ? ' · ' + o.lev + 'x' : '') + '</small></div><div style="text-align:right"><small><a class="lien" href="#" onclick="annulerOrdre(' + o.id + ');return false">annuler</a></small></div></div>').join('') || '<div class="note">Aucun ordre en attente.</div>';
+  const S2 = statsJournal(s.historique), bx = (a, b, c) => '<div class="stat"><small>' + a + '</small><b class="' + (c || '') + '">' + b + '</b></div>';
+  $('s-stats').innerHTML = bx('Trades clôturés', S2.n) + bx('Réussite', S2.n ? nf(S2.winrate, 0) + ' %' : '—') + bx('Résultat réalisé', S2.n ? signe(S2.total, 2) + ' ' + d : '—', S2.total >= 0 ? 'pos' : 'neg')
+    + bx('Espérance / trade', S2.n ? signe(S2.expectancy, 2) + ' ' + d : '—', S2.expectancy >= 0 ? 'pos' : 'neg') + bx('Facteur de profit', S2.n ? (isFinite(S2.pf) ? nf(S2.pf, 2) : '∞') : '—') + bx('Baisse max. du cumul', S2.n ? nf(S2.maxDD, 2) + ' ' + d : '—');
+  $('s-hist').innerHTML = s.historique.slice().sort((a, b) => b.tsClose - a.tsClose).slice(0, 60).map(h => '<div class="trade"><div><b>' + esc(h.symbol) + '</b> ' + (h.side === 'long' ? '🟢 achat' : '🔴 vente') + ' × ' + fmtQty(h.qty)
+    + '<small>' + new Date(h.tsClose).toLocaleDateString('fr-FR') + ' · ' + fmtPrix(h.entry) + ' → ' + fmtPrix(h.exit) + ' · ' + RAISON[h.raison] + (h.lev > 1 ? ' · ' + h.lev + 'x' : '') + '</small></div>'
+    + '<div style="text-align:right"><span class="' + (h.pnl >= 0 ? 'pos' : 'neg') + '">' + signe(h.pnl, 2) + ' ' + d + '</span><small>frais ' + nf(h.fees, 2) + '</small></div></div>').join('') || '<div class="note">Aucun trade clôturé.</div>';
+}
+// ----- Ordres -----
+function formOrdre() {
+  modal('<h2>Nouvel ordre simulé</h2><div class="g2"><div><label>Marché</label><select id="o-marche"><option value="crypto">Crypto</option><option value="actions">Actions</option></select></div>'
+    + '<div><label>Actif</label><input id="o-sym" type="text" autocapitalize="characters" autocomplete="off"></div></div>'
+    + '<div class="g2"><div><label>Sens</label><select id="o-side"><option value="long">Achat (long)</option><option value="short">Vente à découvert (short)</option></select></div>'
+    + '<div><label>Type</label><select id="o-type" onchange="$(\'o-limite\').style.display=this.value===\'limit\'?\'block\':\'none\'"><option value="market">Au marché</option><option value="limit">Limite</option></select></div></div>'
+    + '<div id="o-limite" style="display:none"><label>Prix limite</label><input id="o-prix" type="number" step="any" inputmode="decimal"></div>'
+    + '<div class="g3"><div><label>Quantité</label><input id="o-qty" type="number" step="any" inputmode="decimal"></div><div><label>Stop-loss</label><input id="o-sl" type="number" step="any" inputmode="decimal"></div><div><label>Objectif</label><input id="o-tp" type="number" step="any" inputmode="decimal"></div></div>'
+    + '<div class="g2"><div><label>Levier (x)</label><input id="o-lev" type="number" value="1" min="1" max="20" step="1" inputmode="numeric"></div><div><label>Risque % (si quantité vide)</label><input id="o-risk" type="number" value="1" step="any" inputmode="decimal"></div></div>'
+    + '<button class="b sec" onclick="estimerOrdre()">🔍 Cours actuel et estimation</button><div id="o-est"></div>'
+    + '<div class="g2"><button class="b sec" onclick="fermer()">Annuler</button><button class="b vert" onclick="soumettreOrdre()">Passer l\'ordre</button></div>');
+  $('o-marche').value = S.marche; $('o-sym').value = S.sym[S.marche];
+}
+function lireOrdreForm() {
+  const m = $('o-marche').value;
+  return { m: m, symbol: normaliser(m, $('o-sym').value), side: $('o-side').value, type: $('o-type').value, lev: Math.min(20, Math.max(1, Math.round(num('o-lev')) || 1)), qty: num('o-qty'), sl: num('o-sl') || null, tp: num('o-tp') || null, limite: num('o-prix') };
+}
+async function estimerOrdre() {
+  const f = lireOrdreForm(), R = $('o-est');
+  if (!f.symbol) { R.innerHTML = '<div class="alerte">Indiquez un actif.</div>'; return null; }
+  R.innerHTML = '<div class="note">Récupération du cours…</div>';
+  try {
+    const px = await prixActuel(f.m, f.symbol), fx = await fxActuel();
+    if (!devOK(px.devise)) throw new Error('Actif coté en ' + px.devise + ' : non pris en charge (euro et dollar seulement).');
+    const prixE = f.type === 'limit' && f.limite > 0 ? f.limite : px.prix; let qty = f.qty;
+    if (!(qty > 0) && f.sl && num('o-risk') > 0) {                 // quantité d'après le risque et le stop
+      const r = calculerPosition({ capital: equiteSim(sim, simPrix, fx).equity, capCcy: sim.devise, riskPct: num('o-risk'), fee: sim.fraisPct, lev: f.lev, assetCcy: px.devise, taux: fx, entry: prixE, stop: f.sl, target: 0, entier: f.m === 'actions' });
+      if (r.ok) { qty = r.qty; $('o-qty').value = qty; } else throw new Error(r.erreur);
+    }
+    let h = '<div class="m"><span>Cours actuel</span><span>' + dev(px.devise) + ' ' + fmtPrix(px.prix) + '</span></div>';
+    if (qty > 0) {
+      const val = enBase(qty * prixE, px.devise, sim.devise, fx), marge = val / f.lev, liq = prixLiq({ lev: f.lev, side: f.side, entry: prixE });
+      h += '<div class="m"><span>Quantité</span><span>' + fmtQty(qty) + '</span></div><div class="m"><span>Valeur</span><span>' + nf(val, 2) + ' ' + dev(sim.devise) + '</span></div><div class="m"><span>Marge bloquée</span><span>' + nf(marge, 2) + ' ' + dev(sim.devise) + '</span></div>'
+        + '<div class="m"><span>Frais d\'ouverture</span><span>' + nf(val * sim.fraisPct / 100, 2) + ' ' + dev(sim.devise) + '</span></div>' + (liq != null ? '<div class="m"><span>Liquidation</span><span>≈ ' + fmtPrix(liq) + '</span></div>' : '');
+    } else h += '<div class="note">Indiquez une quantité, ou un stop avec un risque % pour la calculer.</div>';
+    R.innerHTML = h; return { f: f, px: px, fx: fx, qty: qty };
+  } catch (e) { R.innerHTML = '<div class="alerte">' + esc(e.message) + '</div>'; return null; }
+}
+async function soumettreOrdre() {
+  const E = await estimerOrdre(); if (!E) return;
+  const f = E.f, px = E.px, long = f.side === 'long';
+  if (!(E.qty > 0)) { alert('Indiquez une quantité (ou un stop et un risque %).'); return; }
+  if (f.type === 'market') {
+    const r = ouvrirSim(sim, { symbol: f.symbol, marche: f.m, side: f.side, qty: E.qty, prix: px.prix, ccy: px.devise, sl: f.sl, tp: f.tp, lev: f.lev }, E.fx, Date.now());
+    if (!r.ok) { $('o-est').innerHTML = '<div class="alerte">' + esc(r.err) + '</div>'; return; }
+    simPrix[f.m + '|' + f.symbol] = { prix: px.prix, devise: px.devise }; toast('Position ouverte : ' + f.symbol);
+  } else {
+    if (!(f.limite > 0)) { alert('Indiquez le prix limite.'); return; }
+    if (long ? f.limite >= px.prix : f.limite <= px.prix) { $('o-est').innerHTML = '<div class="alerte">' + (long ? 'Un achat limite doit être placé SOUS le cours actuel' : 'Une vente limite doit être placée AU-DESSUS du cours actuel') + ' (sinon, utilisez « Au marché »).</div>'; return; }
+    const e = validerNiveaux(f.side, f.limite, f.sl, f.tp); if (e) { $('o-est').innerHTML = '<div class="alerte">' + esc(e) + '</div>'; return; }
+    sim.ordres.push({ id: sim.nextId++, symbol: f.symbol, marche: f.m, side: f.side, qty: E.qty, prix: f.limite, ccy: px.devise, ts: Date.now(), sl: f.sl, tp: f.tp, lev: f.lev });
+    toast('Ordre limite enregistré : ' + f.symbol);
+  }
+  ecrire('tt_sim', sim); fermer(); majSimUI();
+}
+async function cloturerPos(id) {
+  const p = sim.positions.find(x => x.id === id); if (!p || !confirm('Clôturer ' + p.symbol + ' au cours actuel ?')) return;
+  try {
+    const px = await prixActuel(p.marche, p.symbol), fx = await fxActuel(), r = fermerSim(sim, id, px.prix, fx, Date.now(), 'manuel');
+    if (!r.ok) throw new Error(r.err);
+    ecrire('tt_sim', sim); toast('Clôturé : ' + signe(r.pnl, 2) + ' ' + dev(sim.devise));
+  } catch (e) { alert(e.message); }
+  majSimUI();
+}
+function annulerOrdre(id) { if (!confirm('Annuler cet ordre ?')) return; sim.ordres = sim.ordres.filter(o => o.id !== id); ecrire('tt_sim', sim); majSimUI(); }
+function formNiveaux(id) {
+  const p = sim.positions.find(x => x.id === id); if (!p) return;
+  modal('<h2>Stop et objectif · ' + esc(p.symbol) + '</h2><div class="g2"><div><label>Stop-loss</label><input id="n-sl" type="number" step="any" value="' + (p.sl || '') + '" inputmode="decimal"></div>'
+    + '<div><label>Objectif</label><input id="n-tp" type="number" step="any" value="' + (p.tp || '') + '" inputmode="decimal"></div></div><div class="note">Laissez vide pour retirer le niveau. Vous pouvez remonter le stop pour sécuriser un gain.</div><div id="n-err"></div>'
+    + '<div class="g2"><button class="b sec" onclick="fermer()">Annuler</button><button class="b vert" onclick="enregistrerNiveaux(' + p.id + ')">Enregistrer</button></div>');
+}
+function enregistrerNiveaux(id) {
+  const p = sim.positions.find(x => x.id === id); if (!p) return;
+  const sl = num('n-sl') || null, tp = num('n-tp') || null, px = simPrix[cleSim(p)], ref = px ? px.prix : p.entry, e = validerNiveaux(p.side, ref, sl, tp);
+  if (e) { $('n-err').innerHTML = '<div class="alerte">' + esc(e.replace('prix d\'entrée', 'cours actuel')) + '</div>'; return; }
+  p.sl = sl; p.tp = tp; ecrire('tt_sim', sim); fermer(); majSimUI();
+}
+function formReset() {
+  modal('<h2>Nouveau compte de simulation</h2><div class="g2"><div><label>Devise</label><select id="r-dev"><option>EUR</option><option>USD</option></select></div><div><label>Capital de départ</label><input id="r-cap" type="number" value="10000" min="1" step="any" inputmode="decimal"></div></div>'
+    + '<label>Frais par ordre (%)</label><input id="r-fee" type="number" value="0.1" min="0" max="5" step="any" inputmode="decimal"><div class="alerte">Positions, ordres et historique du compte actuel seront effacés. Exportez-les en CSV d\'abord si besoin.</div>'
+    + '<div class="g2"><button class="b sec" onclick="fermer()">Annuler</button><button class="b rouge" onclick="creerCompte()">Créer</button></div>');
+  $('r-dev').value = sim.devise; $('r-cap').value = sim.capitalInitial; $('r-fee').value = sim.fraisPct;
+}
+function creerCompte() {
+  const c = num('r-cap'), f = num('r-fee');
+  if (!(c > 0) || !(f >= 0 && f <= 5)) { alert('Capital > 0 et frais entre 0 et 5 %.'); return; }
+  sim = SIM_DEF($('r-dev').value, c, f); simPrix = {}; ecrire('tt_sim', sim); fermer(); majSimUI(); toast('Nouveau compte créé');
+}
+function exporterSimCSV() {
+  if (!sim.historique.length) { toast('Aucun trade à exporter'); return; }
+  const c = x => String(x == null ? '' : x).replace('.', ','), dte = t => new Date(t).toISOString().slice(0, 16).replace('T', ' ');
+  const L = ['Ouverture;Cloture;Actif;Sens;Quantite;Entree;Sortie;Levier;Frais;Resultat;Raison'].concat(sim.historique.slice().sort((a, b) => a.ts - b.ts).map(h => [dte(h.ts), dte(h.tsClose), h.symbol, h.side, c(h.qty), c(h.entry), c(h.exit), h.lev, c(+h.fees.toFixed(2)), c(+h.pnl.toFixed(2)), RAISON[h.raison]].join(';')));
+  sauverFichier('TradeTools_simulation_' + new Date().toISOString().slice(0, 10) + '.csv', 'text/csv', '\uFEFF' + L.join('\r\n'));
+}
+
+// =====================================================================
 //  Navigation et mémorisation des saisies
 // =====================================================================
 const PERSIST = ['p-capital', 'p-capccy', 'p-risk', 'p-fee', 'p-lev', 'p-assetccy', 'p-taux', 'p-entry', 'p-stop', 'p-target', 'p-entier', 'e-wr', 'e-rr', 'e-risk', 'e-n', 'j-ccy'];
 function persister() { ecrire('tt_entrees', lireEntrees()); }
 function vue(v) {
-  S.vue = v; ['marche', 'calc', 'journal', 'plus'].forEach(x => { $('v-' + x).className = 'vue' + (x === v ? ' actif' : ''); $('n-' + x).className = x === v ? 'actif' : ''; });
+  S.vue = v; ['marche', 'calc', 'sim', 'journal', 'plus'].forEach(x => { $('v-' + x).className = 'vue' + (x === v ? ' actif' : ''); $('n-' + x).className = x === v ? 'actif' : ''; });
   if (v === 'marche') setTimeout(dessiner, 30); if (v === 'journal') setTimeout(majJournal, 30);
+  if (v === 'sim') { setTimeout(majSimUI, 30); if (sim.positions.length || sim.ordres.length) rafraichirSim(true); }
 }
 (function demarrer() {
   const e = lire('tt_entrees', {});
   PERSIST.forEach(id => { const el = $(id); if (!el) return; if (e[id] != null) { if (el.type === 'checkbox') el.checked = !!e[id]; else el.value = e[id]; } el.addEventListener('change', persister); });
   const cv = $('graph'); ['pointerdown', 'pointermove'].forEach(t => cv.addEventListener(t, lireBougie));
-  window.addEventListener('resize', () => { dessiner(); if (S.vue === 'journal') majJournal(); });
-  remplirTf(); rendreChips(); majJournal(); majBackupInfo(); chargerMarche();
+  window.addEventListener('resize', () => { dessiner(); if (S.vue === 'journal') majJournal(); if (S.vue === 'sim') majSimUI(); });
+  setInterval(() => { if (S.vue === 'sim' && !document.hidden && $('sim-auto').checked && (sim.positions.length || sim.ordres.length)) rafraichirSim(true); }, 60000);
+  remplirTf(); rendreChips(); majJournal(); majBackupInfo(); majSimUI(); chargerMarche();
 })();
 </script>
 </body>
